@@ -7,10 +7,6 @@
 SUBSYS(cpuset)
 #endif
 
-#if IS_ENABLED(CONFIG_CGROUP_DEBUG)
-SUBSYS(debug)
-#endif
-
 #if IS_ENABLED(CONFIG_CGROUP_SCHED)
 SUBSYS(cpu)
 #endif
@@ -51,4 +47,12 @@ SUBSYS(net_prio)
 SUBSYS(hugetlb)
 #endif
 
-/* */
+/*
+ * The following subsystems are not supported on the default hierarchy.
+ */
+#if IS_ENABLED(CONFIG_CGROUP_DEBUG)
+SUBSYS(debug)
+#endif
+/*
+ * DO NOT ADD ANY SUBSYSTEM WITHOUT EXPLICIT ACKS FROM CGROUP MAINTAINERS.
+ */
