@@ -1,5 +1,5 @@
-#ifndef __ASM_AVR32_SOCKET_H
-#define __ASM_AVR32_SOCKET_H
+#ifndef _UAPI__ASM_AVR32_SOCKET_H
+#define _UAPI__ASM_AVR32_SOCKET_H
 
 #include <asm/sockios.h>
 
@@ -73,5 +73,8 @@
 #define SO_LOCK_FILTER		44
 
 #define SO_SELECT_ERR_QUEUE	45
+
+#define SO_ATTACH_BPF		50
+#define SO_DETACH_BPF		SO_DETACH_FILTER
 
 #endif /* __ASM_AVR32_SOCKET_H */
