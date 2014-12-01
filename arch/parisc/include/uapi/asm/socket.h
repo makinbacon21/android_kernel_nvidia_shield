@@ -73,4 +73,7 @@
 
 #define SO_SELECT_ERR_QUEUE	0x4026
 
+#define SO_ATTACH_BPF		0x402B
+#define SO_DETACH_BPF		SO_DETACH_FILTER
+
 #endif /* _UAPI_ASM_SOCKET_H */
