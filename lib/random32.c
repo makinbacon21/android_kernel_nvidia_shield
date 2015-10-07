@@ -174,25 +174,12 @@ static int __init prandom_init(void)
 }
 core_initcall(prandom_init);
 
-/*
- *	Generate better values after random number generator
- *	is fully initialized.
- */
-static void __prandom_reseed(bool late)
+void prandom_seed_full_state(struct rnd_state __percpu *pcpu_state)
 {
-	int i;
-	unsigned long flags;
-	static bool latch = false;
-	static DEFINE_SPINLOCK(lock);
-
-	/* only allow initial seeding (late == false) once */
-	spin_lock_irqsave(&lock, flags);
-	if (latch && !late)
-		goto out;
-	latch = true;
+       int i;
 
 	for_each_possible_cpu(i) {
-		struct rnd_state *state = &per_cpu(net_rand_state,i);
+		struct rnd_state *state = per_cpu_ptr(pcpu_state, i);
 		u32 seeds[3];
 
 		get_random_bytes(&seeds, sizeof(seeds));
@@ -203,6 +190,26 @@ static void __prandom_reseed(bool late)
 		/* mix it in */
 		prandom_u32_state(state);
 	}
+}
+
+/*
+ *	Generate better values after random number generator
+ *	is fully initialized.
+ */
+static void __prandom_reseed(bool late)
+{
+	unsigned long flags;
+	static bool latch = false;
+	static DEFINE_SPINLOCK(lock);
+
+	/* only allow initial seeding (late == false) once */
+	spin_lock_irqsave(&lock, flags);
+	if (latch && !late)
+		goto out;
+	latch = true;
+
+	prandom_seed_full_state(&net_rand_state);
+
 out:
 	spin_unlock_irqrestore(&lock, flags);
 }
