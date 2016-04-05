@@ -23,6 +23,9 @@ extern const unsigned char arm64_relocate_new_kernel[];
 extern const unsigned long arm64_relocate_new_kernel_size;
 
 static unsigned long kimage_start;
+#ifdef CONFIG_KEXEC_HARDBOOT
+extern unsigned long arm64_kexec_hardboot;
+#endif
 
 /**
  * kexec_image_info - For debugging output.
@@ -193,6 +196,10 @@ void machine_kexec(struct kimage *kimage)
 	__flush_dcache_area(reboot_code_buffer, arm64_relocate_new_kernel_size);
 	flush_icache_range((uintptr_t)reboot_code_buffer,
 		arm64_relocate_new_kernel_size);
+
+#ifdef CONFIG_KEXEC_HARDBOOT
+	arm64_kexec_hardboot = kimage->hardboot;
+#endif
 
 	/* Flush the kimage list and its buffers. */
 	kexec_list_flush(kimage);
