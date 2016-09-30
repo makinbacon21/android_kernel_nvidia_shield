@@ -1,0 +1,11 @@
+diff a/drivers/android/binder.c b/drivers/android/binder.c	(rejected hunks)
+@@ -910,7 +919,8 @@ static void binder_free_buf(struct binder_proc *proc,
+ 	buffer_size = binder_buffer_size(proc, buffer);
+ 
+ 	size = ALIGN(buffer->data_size, sizeof(void *)) +
+-		ALIGN(buffer->offsets_size, sizeof(void *));
++		ALIGN(buffer->offsets_size, sizeof(void *)) +
++		ALIGN(buffer->extra_buffers_size, sizeof(void *));
+ 
+ 	binder_debug(BINDER_DEBUG_BUFFER_ALLOC,
+ 		     "%d: binder_free_buf %p size %zd buffer_size %zd\n",
