@@ -18,6 +18,8 @@ comment "NVIDIA Tegra options"
 
 config ARCH_TEGRA_2x_SOC
 	bool "Enable support for Tegra20 family"
+	depends on !ARCH_TEGRA_3x_SOC
+	depends on !ARCH_TEGRA_11x_SOC
 	depends on !ARCH_TEGRA_12x_SOC
 	select ARCH_NEEDS_CPU_IDLE_COUPLED if SMP
 	select ARM_ERRATA_720789
@@ -44,6 +46,7 @@ config ARCH_TEGRA_2x_SOC
 
 config ARCH_TEGRA_3x_SOC
 	bool "Enable support for Tegra30 family"
+	depends on !ARCH_TEGRA_11x_SOC
 	depends on !ARCH_TEGRA_12x_SOC
 	select ARM_ERRATA_743622
 	select ARM_ERRATA_751472
@@ -65,6 +68,50 @@ config ARCH_TEGRA_3x_SOC
 	help
 	  Support for NVIDIA Tegra T30 processor family, based on the
 	  ARM CortexA9MP CPU and the ARM PL310 L2 cache controller
+
+config ARCH_TEGRA_11x_SOC
+	bool "Tegra 11x family SOC"
+	depends on !ARCH_TEGRA_12x_SOC
+	select ARCH_HAS_PASR
+	select ARCH_TEGRA_4GB_MEMORY
+	select ARCH_TEGRA_HAS_CL_DVFS
+	select ARCH_TEGRA_HAS_DUAL_CPU_CLUSTERS
+	select ARCH_TEGRA_HAS_SYMMETRIC_CPU_PWR_GATE
+	select ARM_CPU_SUSPEND if PM
+	select ARM_ERRATA_798181
+	select ARM_ERRATA_799270
+	select ARM_GIC
+	select ARM_L1_CACHE_SHIFT_6
+	select ARM_SAVE_DEBUG_CONTEXT if PM_SLEEP
+	select CPU_V7
+	select HAVE_ARM_ARCH_TIMER
+	select NVMAP_CACHE_MAINT_BY_SET_WAYS if TEGRA_NVMAP
+	select NVMAP_CACHE_MAINT_BY_SET_WAYS_ON_ONE_CPU if TEGRA_NVMAP
+	select PINCTRL
+	select PINCTRL_TEGRA114
+	select POWER_RESET
+	select SYSTEM_PMIC
+	select PM_GENERIC_DOMAINS if PM
+	select REPORT_PRESENT_CPUS if TEGRA_AUTO_HOTPLUG
+	select SOC_BUS
+	select TEGRA_DUAL_CBUS
+	select TEGRA_CORE_EDP_LIMITS
+	select TEGRA_ERRATA_977223
+	select TEGRA_ERRATA_1053704 if TEGRA_IOMMU_SMMU
+	select TEGRA_ERRATA_1157520
+	select TEGRA_ISOMGR
+	select TEGRA_ISOMGR_SYSFS
+	select TEGRA_LP2_CPU_TIMER if !TEGRA_RAIL_OFF_MULTIPLE_CPUS
+	select TEGRA_MC_PTSA
+	select TEGRA_VDD_CORE_OVERRIDE if TEGRA_EMC_SCALING_ENABLE
+	select USB_ARCH_HAS_EHCI if USB_SUPPORT
+	select USB_EHCI_TEGRA if USB_SUPPORT
+	select USB_ULPI if USB_SUPPORT
+	select USB_ULPI_VIEWPORT if USB_SUPPORT
+	select PROC_DEVICETREE
+	help
+	  Support for NVIDIA Tegra 11x family of SoCs, based upon the
+	  ARM Cortex-A15MP CPU
 
 config ARCH_TEGRA_12x_SOC
 	bool "Tegra 12x family SOC"
@@ -215,6 +262,47 @@ config MACH_LAGUNA
 	 select MACH_HAS_SND_SOC_TEGRA_MAX98090 if SND_SOC
 	 help
 	 Support for NVIDIA LAGUNA Development platform
+
+config MACH_DALMORE
+       bool "Dalmore board"
+       depends on ARCH_TEGRA_11x_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5640 if SND_SOC
+       help
+         Support for NVIDIA DALMORE development platform
+
+config MACH_PISMO
+       bool "Pismo board"
+       depends on ARCH_TEGRA_11x_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5640 if SND_SOC
+       help
+         Support for NVIDIA PISMO development platform
+
+config MACH_MACALLAN
+       bool "Macallan board"
+       depends on ARCH_TEGRA_11x_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5640 if SND_SOC
+       help
+         Support for NVIDIA MACALLAN development platform
+
+config MACH_TEGRA_PLUTO
+       bool "Pluto board"
+       depends on ARCH_TEGRA_11x_SOC
+       select MACH_HAS_SND_SOC_TEGRA_CS42L73 if SND_SOC
+       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC326X if SND_SOC
+       help
+         Support for NVIDIA PLUTO development platform
+
+config MACH_ROTH
+       bool "Thor board"
+       depends on ARCH_TEGRA_11x_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
+       select MACH_HAS_SND_SOC_TEGRA_RT5640 if SND_SOC
+       select TEGRA_CPU_FREQ_GOVERNOR_KERNEL_START
+       help
+         Support for NVIDIA THOR development platform
 
 choice
        prompt "Tegra platform type"
