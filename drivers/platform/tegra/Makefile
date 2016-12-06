@@ -41,11 +41,13 @@ obj-y += powergate/
 # from arch/arm/tegra area.
 ifeq ($(CONFIG_TEGRA_SOCTHERM),y)
 ccflags-y += -I$(srctree)/arch/arm/mach-tegra
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += tegra_soctherm.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += tegra_soctherm.o
 endif
 
 ifeq ($(CONFIG_TEGRA_THERMAL_THROTTLE),y)
 ccflags-y += -I$(srctree)/arch/arm/mach-tegra
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += tegra_throttle.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += tegra_throttle.o
 obj-$(CONFIG_ARCH_TEGRA_21x_SOC)        += tegra_throttle.o
 endif
@@ -53,11 +55,13 @@ endif
 ifeq ($(CONFIG_TEGRA_CLK_FRAMEWORK),y)
 obj-y += dvfs.o
 obj-$(CONFIG_TEGRA_CLK_FRAMEWORK) += clock.o tegra-non-dt-clock-reset.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += tegra11_clocks.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += tegra12_clocks.o
 obj-$(CONFIG_DEBUG_FS) += clocks_stats.o
 ifeq ($(CONFIG_ARCH_TEGRA_13x_SOC),y)
 obj-y += tegra13_dvfs.o
 else
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += tegra11_dvfs.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += tegra12_dvfs.o
 endif
 obj-$(CONFIG_ARCH_TEGRA_HAS_CL_DVFS) += tegra_cl_dvfs.o
@@ -96,6 +100,7 @@ obj-$(CONFIG_TEGRA_CPU_VOLT_CAP)	+= tegra_volt_cap.o
 
 ifeq ($(CONFIG_PM_SLEEP),y)
 obj-y += tegra-wakeups.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += wakeups-t11x.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += wakeups-t12x.o
 endif
 

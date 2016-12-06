@@ -12,6 +12,8 @@ obj-y                                   += mc.o
 
 # MC error reporting.
 obj-y                                   += mcerr.o
+obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += mcerr-t3.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += mcerr-t11.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += mcerr-t12.o
 obj-$(CONFIG_ARCH_TEGRA_21x_SOC)        += mcerr-t21.o
 
@@ -23,6 +25,8 @@ obj-$(CONFIG_ARCH_TEGRA_21x_SOC)        += tegra21_emc_cc_r21021.o
 
 # Latency allowance
 obj-y                                   += latency_allowance.o
+obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += tegra3_la.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += tegra11x_la.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += tegra12x_la.o
 obj-$(CONFIG_ARCH_TEGRA_21x_SOC)        += tegra21x_la.o
 
@@ -36,7 +40,9 @@ ifeq ($(CONFIG_TEGRA_MC),y)
 obj-y += tegra_emc.o
 obj-y                                   += tegra_emc_timers.o
 
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += tegra11_emc.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += tegra12_emc.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += tegra_emc_dt_parse.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += tegra_emc_dt_parse.o
 obj-$(CONFIG_ARCH_TEGRA_21x_SOC) += tegra_emc_dt_parse.o
 endif

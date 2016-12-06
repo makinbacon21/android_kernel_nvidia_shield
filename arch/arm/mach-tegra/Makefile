@@ -43,7 +43,10 @@ obj-$(CONFIG_TEGRA_USE_SIMON)           += tegra_simon.o
 
 ifeq ($(CONFIG_CPU_IDLE),y)
 ifeq ($(CONFIG_PM_SLEEP),y)
+obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += cpuidle-t3.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += cpuidle-t11x.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += cpuidle-t11x.o
+obj-$(CONFIG_ARCH_TEGRA_14x_SOC)        += cpuidle-t14x.o
 endif
 endif
 endif
@@ -63,7 +66,11 @@ obj-y                                   += apbio.o
 obj-$(CONFIG_TEGRA_ARB_SEMAPHORE)       += arb_sema.o
 
 obj-$(CONFIG_TEGRA_CORE_EDP_LIMITS)     += edp_core.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += tegra11_edp.o
+obj-$(CONFIG_ARCH_TEGRA_14x_SOC)        += tegra14_edp.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += tegra12_edp.o
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += tegra11_speedo.o
+obj-$(CONFIG_ARCH_TEGRA_14x_SOC)        += tegra14_speedo.o
 ifeq ($(CONFIG_ARCH_TEGRA_13x_SOC),y)
 obj-y                                   += tegra13_speedo.o
 else
@@ -81,6 +88,7 @@ obj-y                                   += headsmp.o
 
 obj-$(CONFIG_ARCH_TEGRA_2x_SOC)         += board-dt-tegra20.o
 obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += board-dt-tegra30.o
+obj-$(CONFIG_ARCH_TEGRA_14x_SOC)        += board-dt-tegra148.o
 
 obj-$(CONFIG_ARCH_TEGRA_2x_SOC)		+= board-harmony-pcie.o
 
