@@ -43,10 +43,8 @@ obj-$(CONFIG_TEGRA_USE_SIMON)           += tegra_simon.o
 
 ifeq ($(CONFIG_CPU_IDLE),y)
 ifeq ($(CONFIG_PM_SLEEP),y)
-obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += cpuidle-t3.o
 obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += cpuidle-t11x.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += cpuidle-t11x.o
-obj-$(CONFIG_ARCH_TEGRA_14x_SOC)        += cpuidle-t14x.o
 endif
 endif
 endif
