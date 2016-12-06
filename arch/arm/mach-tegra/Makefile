@@ -34,21 +34,9 @@ obj-y                                   += common-t2.o
 obj-y                                   += pm-t2.o
 obj-$(CONFIG_ARCH_TEGRA_2x_SOC)		+= sleep-t20.o
 obj-$(CONFIG_PM_SLEEP)                  += wakeups-t2.o
-ifeq ($(CONFIG_CPU_IDLE),y)
-obj-$(CONFIG_PM_SLEEP)                  += cpuidle-t2.o
-endif
 else
 obj-y                                   += sleep-t30.o
 obj-$(CONFIG_TEGRA_USE_SIMON)           += tegra_simon.o
-
-ifeq ($(CONFIG_CPU_IDLE),y)
-ifeq ($(CONFIG_PM_SLEEP),y)
-obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += cpuidle-t3.o
-obj-$(CONFIG_ARCH_TEGRA_11x_SOC)        += cpuidle-t11x.o
-obj-$(CONFIG_ARCH_TEGRA_12x_SOC)        += cpuidle-t11x.o
-obj-$(CONFIG_ARCH_TEGRA_14x_SOC)        += cpuidle-t14x.o
-endif
-endif
 endif
 
 obj-y                                   += delay.o
