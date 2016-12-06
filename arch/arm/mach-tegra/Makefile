@@ -119,6 +119,44 @@ obj-y                                   += panel-s-edp-uhdtv-15-6.o
 obj-y                                   += panel-o-720p-6-0.o
 obj-y                                   += panel-o-720p-6-0-01.o
 
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore.o
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore-memory.o
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore-power.o
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore-sdhci.o
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore-panel.o
+obj-${CONFIG_MACH_DALMORE}              += board-roth-panel.o
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore-kbc.o
+obj-${CONFIG_MACH_DALMORE}              += board-dalmore-sensors.o
+obj-${CONFIG_MACH_DALMORE}              += panel-a-1080p-11-6.o
+obj-${CONFIG_MACH_DALMORE}              += panel-s-wqxga-10-1.o
+
+obj-${CONFIG_MACH_PISMO}                += board-pismo.o
+obj-${CONFIG_MACH_PISMO}                += board-pismo-memory.o
+obj-${CONFIG_MACH_PISMO}                += board-pismo-power.o
+obj-${CONFIG_MACH_PISMO}                += board-pismo-sdhci.o
+obj-${CONFIG_MACH_PISMO}                += board-pismo-panel.o
+obj-${CONFIG_MACH_PISMO}                += board-pismo-sensors.o
+
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan.o
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan-memory.o
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan-power.o
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan-sdhci.o
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan-panel.o
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan-kbc.o
+obj-${CONFIG_MACH_MACALLAN}             += board-macallan-sensors.o
+
+
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto-memory.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto-power.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto-sdhci.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto-panel.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto-kbc.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += board-pluto-sensors.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += panel-l-720p-5.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += panel-j-720p-4-7.o
+obj-${CONFIG_MACH_TEGRA_PLUTO}          += panel-s-1080p-5.o
+
 obj-${CONFIG_MACH_ARDBEG}               += board-ardbeg.o
 obj-${CONFIG_MACH_ARDBEG}               += board-ardbeg-sdhci.o
 obj-${CONFIG_MACH_ARDBEG}               += board-ardbeg-sensors.o
@@ -168,3 +206,12 @@ obj-$(CONFIG_TEGRA_BBC_PROXY)           += tegra_bbc_proxy.o
 obj-$(CONFIG_TEGRA_BBC_THERMAL)         += tegra_bbc_thermal.o
 
 
+obj-${CONFIG_MACH_ROTH}                 += board-roth.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-memory.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-power.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-sdhci.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-panel.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-kbc.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-sensors.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-fan.o
+obj-${CONFIG_MACH_ROTH}                 += board-roth-leds.o
