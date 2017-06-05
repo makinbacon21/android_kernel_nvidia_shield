@@ -42,7 +42,7 @@
 	firmware {
 		android {
 			compatible = "android,firmware";
-			hardware = "tegra";
+			hardware = "jetson-tk1";
 		};
 	};
 
