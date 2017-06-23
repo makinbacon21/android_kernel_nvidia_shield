@@ -51,6 +51,31 @@
 		bootargs = "tegraid=40.0.0.00.00 vmalloc=256M video=tegrafb console=ttyS0,115200n8 earlyprintk";
 		linux,initrd-start = <0x85000000>;
 		linux,initrd-end = <0x851bc400>;
+
+		proc-board {
+			id = <0x6e1>;
+			sku = <0x4d2>;
+			fab = <0x4>;
+			major_revision = <0x0>;
+			minor_revision = <0x0>;
+		};
+
+		pmu-board {
+			id = <0x6e1>;
+			sku = <0x4d2>;
+			fab = <0x4>;
+			major_revision = <0x0>;
+			minor_revision = <0x0>;
+		};
+
+		display-board {
+			id = <0x791>;
+			sku = <0x3e8>;
+			fab = <0x0>;
+			major_revision = <0x0>;
+			minor_revision = <0x0>;
+		};
+
 	};
 
 	firmware {
@@ -102,6 +127,12 @@
 				smartdimmer {
 					status = "disabled";
 				};
+			};
+		};
+		tsec {
+			carveout {
+				carveout_addr = <0xfe000000>;
+				carveout_size = <0x2000000>;
 			};
 		};
 	};
