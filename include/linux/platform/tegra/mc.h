@@ -20,7 +20,10 @@
 #define __MACH_TEGRA_MC_H
 
 /* Pull in chip specific MC header - contains the regs for the platform. */
-#if defined(CONFIG_ARCH_TEGRA_12x_SOC)
+#if defined(CONFIG_ARCH_TEGRA_11x_SOC)
+#include <linux/platform/tegra/mc-regs-t11x.h>
+#define MC_LATENCY_ALLOWANCE_BASE	MC_LATENCY_ALLOWANCE_AVPC_0
+#elif defined(CONFIG_ARCH_TEGRA_12x_SOC)
 #include <linux/platform/tegra/mc-regs-t12x.h>
 #define MC_LATENCY_ALLOWANCE_BASE	MC_LATENCY_ALLOWANCE_AVPC_0
 #elif defined(CONFIG_ARCH_TEGRA_21x_SOC)
