@@ -35,19 +35,15 @@
 #include <linux/therm_est.h>
 #include <linux/nct1008.h>
 #include <mach/edp.h>
-#include <mach/gpio-tegra.h>
-#include <mach/pinmux-t11.h>
-#include <mach/pinmux.h>
 #include <generated/mach-types.h>
 
 #include "gpio-names.h"
 #include "board.h"
 #include "board-common.h"
 #include "board-roth.h"
-#include "cpu-tegra.h"
+#include <linux/platform/tegra/cpu-tegra.h>
 #include "devices.h"
 #include "tegra-board-id.h"
-#include "dvfs.h"
 
 static struct throttle_table tj_throttle_table[] = {
 	/* CPU_THROT_LOW cannot be used by other than CPU */
@@ -196,18 +192,6 @@ static struct i2c_board_info roth_i2c4_nct1008_board_info[] = {
 		.irq = -1,
 	}
 };
-
-#define VI_PINMUX(_pingroup, _mux, _pupd, _tri, _io, _lock, _ioreset) \
-	{							\
-		.pingroup	= TEGRA_PINGROUP_##_pingroup,	\
-		.func		= TEGRA_MUX_##_mux,		\
-		.pupd		= TEGRA_PUPD_##_pupd,		\
-		.tristate	= TEGRA_TRI_##_tri,		\
-		.io		= TEGRA_PIN_##_io,		\
-		.lock		= TEGRA_PIN_LOCK_##_lock,	\
-		.od		= TEGRA_PIN_OD_DEFAULT,		\
-		.ioreset	= TEGRA_PIN_IO_RESET_##_ioreset	\
-	}
 
 /* MPU board file definition	*/
 static struct mpu_platform_data mpu6050_gyro_data = {

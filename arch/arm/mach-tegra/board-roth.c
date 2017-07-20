@@ -50,30 +50,28 @@
 #include <linux/clocksource.h>
 #include <linux/irqchip.h>
 #include <linux/tegra_fiq_debugger.h>
+#include <linux/pinctrl/pinconf-tegra.h>
 
 #include <asm/system_info.h>
 
 #include <mach/irqs.h>
-#include <mach/pinmux.h>
-#include <mach/pinmux-t11.h>
 #include <mach/io_dpd.h>
 #include <mach/i2s.h>
-#include <mach/isomgr.h>
+#include <linux/platform/tegra/isomgr.h>
 #include <mach/tegra_asoc_pdata.h>
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
-#include <mach/gpio-tegra.h>
 #include <mach/edp.h>
 
 #include "board.h"
 #include "board-common.h"
-#include "clock.h"
+#include <linux/platform/tegra/clock.h>
 #include "board-roth.h"
 #include "devices.h"
 #include "gpio-names.h"
 #include "iomap.h"
 #include "pm.h"
-#include "common.h"
+#include <linux/platform/tegra/common.h>
 #include "tegra-board-id.h"
 #include "board-touch-raydium.h"
 #include "tegra-of-dev-auxdata.h"
