@@ -23,7 +23,7 @@
 #include "board.h"
 #include "board-roth.h"
 
-#include "tegra11_emc.h"
+#include <linux/platform/tegra/tegra11_emc.h>
 #include "devices.h"
 
 static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {

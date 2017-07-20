@@ -31,8 +31,7 @@
 
 #include <mach/irqs.h>
 #include <mach/dc.h>
-#include <mach/pinmux.h>
-#include <mach/pinmux-t11.h>
+#include <linux/pinctrl/pinconf-tegra.h>
 #include <asm/mach-types.h>
 
 #include "board.h"

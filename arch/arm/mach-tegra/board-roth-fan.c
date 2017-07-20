@@ -21,8 +21,6 @@
 #include <linux/platform_data/pwm_fan.h>
 #include <linux/platform_device.h>
 
-#include <mach/gpio-tegra.h>
-
 #include "gpio-names.h"
 #include "devices.h"
 #include "board.h"
@@ -34,17 +32,17 @@ static struct pwm_fan_platform_data fan_data_yltc_8k = {
 	.active_steps = MAX_ACTIVE_STATES,
 	.active_rpm = {
 		0, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000},
-	.active_pwm = {0, 158*1024, 227*1024 , 230*1024, 235*1024, 240*1024,
-				245*1024, 250*1024, 252*1024, 255*1024},
-	.active_rru = {1024*50, 1024, 1024, 256, 256, 256, 256, 256, 256, 256},
-	.active_rrd = {1024*50, 1024, 1024, 256, 256, 256, 256, 128, 128, 128},
+	.active_pwm = {0, 158, 227, 230, 235, 240,
+				245, 250, 252, 255},
+	.active_rru = {50, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	.active_rrd = {50, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 	/*Lookup table to get the actual state cap*/
 	.state_cap_lookup = {1, 1, 1, 1, 1, 1, 1, 2, 2, 2},
-	.pwm_period = 256,
+	.pwm_period = 45334,
 	.pwm_id = 0,
 	.step_time = 100, /*msecs*/
 	.state_cap = 1,
-	.precision_multiplier = 1024,
+	.active_pwm_max = 256,
 	.tach_gpio = -1,
 };
 
@@ -52,18 +50,18 @@ static struct pwm_fan_platform_data fan_data_delta_6k = {
 	.active_steps = MAX_ACTIVE_STATES,
 	.active_rpm = {
 		0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 10000, 11000},
-	.active_pwm = {0, 80*1024, 110*1024 , 150*1024, 235*1024, 240*1024,
-				245*1024, 250*1024, 252*1024, 255*1024},
-	.active_rru = {1024*40, 1024*2, 1024, 256,
-						256, 256, 256, 256, 256, 256},
-	.active_rrd = {1024*40, 1024*2, 1024, 256, 256,
-						256, 256, 128, 128, 128},
+	.active_pwm = {0, 80, 110, 150, 235, 240,
+				245, 250, 252, 255},
+	.active_rru = {40, 2, 1, 1,
+						1, 1, 1, 1, 1, 1},
+	.active_rrd = {40, 2, 1, 1, 1,
+						1, 1, 1, 1, 1},
 	.state_cap_lookup = {2, 2, 2, 2, 2, 2, 2, 3, 3, 3},
-	.pwm_period = 256,
+	.pwm_period = 45334,
 	.pwm_id = 0,
 	.step_time = 100, /*msecs*/
 	.state_cap = 2,
-	.precision_multiplier = 1024,
+	.active_pwm_max = 256,
 	.tach_gpio = TEGRA_GPIO_PU2,
 };
 

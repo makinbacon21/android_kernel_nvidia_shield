@@ -22,9 +22,6 @@
 #include <linux/leds.h>
 #include <linux/leds_pwm.h>
 #include <linux/pwm.h>
-#include <mach/gpio-tegra.h>
-#include <mach/pinmux.h>
-#include <mach/pinmux-t11.h>
 
 #include "gpio-names.h"
 #include "devices.h"
