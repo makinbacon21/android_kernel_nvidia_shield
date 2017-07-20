@@ -87,7 +87,9 @@ static void *tegra_emc_dt_parse_pdata_comp(const char *emc_mode,
 
 	int i = 0, ret = 0;
 	struct device_node *iter;
-#if defined(CONFIG_ARCH_TEGRA_12x_SOC)
+#if defined(CONFIG_ARCH_TEGRA_11x_SOC)
+	struct tegra11_emc_table *tables;
+#elif defined(CONFIG_ARCH_TEGRA_12x_SOC)
 	struct tegra12_emc_table *tables;
 #elif defined(CONFIG_ARCH_TEGRA_21x_SOC)
 	struct tegra21_emc_table *tables;
@@ -304,7 +306,11 @@ void *tegra_emc_dt_parse_pdata(struct platform_device *pdev)
 	const char *emc_mode = "nvidia,emc-mode-0";
 	const void *prop;
 
-#if defined(CONFIG_ARCH_TEGRA_12x_SOC)
+#if defined(CONFIG_ARCH_TEGRA_11x_SOC)
+	struct tegra11_emc_pdata *pdata = NULL;
+	const char *comp = "nvidia,tegra11-emc-table";
+	const char *comp_derated = "nvidia,tegra11-emc-table-derated";
+#elif defined(CONFIG_ARCH_TEGRA_12x_SOC)
 	struct tegra12_emc_pdata *pdata = NULL;
 	const char *comp = "nvidia,tegra12-emc-table";
 	const char *comp_derated = "nvidia,tegra12-emc-table-derated";
