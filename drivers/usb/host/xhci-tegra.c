@@ -2118,7 +2118,8 @@ static void save_ctle_context(struct tegra_xhci_hcd *tegra,
 	tegra->ctle_ctx_saved = (1 << port);
 }
 
-#if defined(CONFIG_ARCH_TEGRA_12x_SOC) || defined(CONFIG_ARCH_TEGRA_13x_SOC)
+#if defined(CONFIG_ARCH_TEGRA_12x_SOC) || defined(CONFIG_ARCH_TEGRA_13x_SOC) || \
+    defined(CONFIG_ARCH_TEGRA_11x_SOC)
 static void tegra_xhci_restore_dfe_context(struct tegra_xhci_hcd *tegra,
 	u8 port)
 {
@@ -2141,7 +2142,9 @@ static void tegra_xhci_restore_dfe_context(struct tegra_xhci_hcd *tegra,
 	padctl_writel(tegra, reg
 			, tegra->padregs->iophy_usb3_padX_ctlY_0[port][3]);
 }
+#endif
 
+#if defined(CONFIG_ARCH_TEGRA_12x_SOC) || defined(CONFIG_ARCH_TEGRA_13x_SOC)
 static void restore_ctle_context(struct tegra_xhci_hcd *tegra,
 	u8 port)
 {
