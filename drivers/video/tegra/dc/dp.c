@@ -1558,9 +1558,11 @@ bool tegra_dc_dp_calc_config(struct tegra_dc_dp_data *dp,
 static int tegra_dp_init_max_link_cfg(struct tegra_dc_dp_data *dp,
 					struct tegra_dc_dp_link_config *cfg)
 {
+#ifdef CONFIG_TEGRA_DC_FAKE_PANEL_SUPPORT
 	if (dp->dc->out->type == TEGRA_DC_OUT_FAKE_DP)
 		tegra_dc_init_fake_panel_link_cfg(cfg);
 	else {
+#endif
 		u8 dpcd_data;
 		int ret;
 
@@ -1637,7 +1639,9 @@ static int tegra_dp_init_max_link_cfg(struct tegra_dc_dp_data *dp,
 		cfg->edp_cap = (dpcd_data &
 			NV_DPCD_EDP_CONFIG_CAP_DISPLAY_CONTROL_CAP_YES) ?
 			true : false;
+#ifdef CONFIG_TEGRA_DC_FAKE_PANEL_SUPPORT
 	}
+#endif
 
 	cfg->bits_per_pixel = dp->dc->out->depth ? : 24;
 

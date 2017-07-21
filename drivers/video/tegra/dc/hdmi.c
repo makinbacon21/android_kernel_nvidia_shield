@@ -2403,6 +2403,7 @@ static void tegra_dc_hdmi_disable(struct tegra_dc *dc)
 }
 
 
+#if !defined(CONFIG_ARCH_TEGRA_11x_SOC)
 /* To determine the best parent clock rate for a nominal HDMI pixel clock
  * rate for T124 host1x display controller
  * o inputs:
@@ -2457,6 +2458,7 @@ static unsigned long  tegra12x_hdmi_determine_parent(
 	 */
 	return (unsigned long)(ref / 2 * b);
 }
+#endif
 
 
 static long tegra_dc_hdmi_setup_clk(struct tegra_dc *dc, struct clk *clk)

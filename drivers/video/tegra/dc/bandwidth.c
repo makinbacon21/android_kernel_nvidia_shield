@@ -621,7 +621,7 @@ static int tegra_dc_handle_latency_allowance(struct tegra_dc *dc,
 	}
 #else
 	tegra_set_disp_latency_allowance(la_id_tab[dc->ctrl_num][w->idx],
-						emc_freq_hz,
+						clk_get_rate(clk_get(NULL, "emc")),
 						bw,
 						disp_params);
 #endif
