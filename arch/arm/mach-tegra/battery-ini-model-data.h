@@ -153,7 +153,6 @@ static struct max17042_config_data __maybe_unused
 	.dpacc = 0x3200,
 	.fctc = 0x05e0,
 	.kempty0 = 0x0600,
-	.cell_technology = POWER_SUPPLY_TECHNOLOGY_LION,
 	.cell_char_tbl = {
 		/* Data to be written from 0x80h */
 		0x9380, 0xAB70, 0xAFA0, 0xB3E0, 0xB790, 0xBB40,

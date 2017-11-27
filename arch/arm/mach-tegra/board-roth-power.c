@@ -876,5 +876,5 @@ static struct soctherm_platform_data roth_soctherm_data = {
 
 int __init roth_soctherm_init(void)
 {
-	return tegra11_soctherm_init(&roth_soctherm_data);
+	return tegra_soctherm_init(&roth_soctherm_data);
 }

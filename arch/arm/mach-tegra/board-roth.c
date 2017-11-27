@@ -224,26 +224,6 @@ static void roth_i2c_init(void)
 	i2c_register_board_info(0, &roth_codec_tfa9887L_info, 1);
 }
 
-static struct resource tegra_rtc_resources[] = {
-	[0] = {
-		.start = TEGRA_RTC_BASE,
-		.end = TEGRA_RTC_BASE + TEGRA_RTC_SIZE - 1,
-		.flags = IORESOURCE_MEM,
-	},
-	[1] = {
-		.start = INT_RTC,
-		.end = INT_RTC,
-		.flags = IORESOURCE_IRQ,
-	},
-};
-
-struct platform_device tegra_rtc_device = {
-	.name = "tegra_rtc",
-	.id   = -1,
-	.resource = tegra_rtc_resources,
-	.num_resources = ARRAY_SIZE(tegra_rtc_resources),
-};
-
 static struct tegra_asoc_platform_data roth_audio_pdata = {
 	.gpio_spkr_en		= TEGRA_GPIO_SPKR_EN,
 	.gpio_hp_det		= TEGRA_GPIO_HP_DET,
@@ -363,7 +343,6 @@ static struct tegra_usb_platform_data tegra_udc_pdata = {
 	.op_mode = TEGRA_USB_OPMODE_DEVICE,
 	.u_data.dev = {
 		.vbus_pmu_irq = 0,
-		.vbus_gpio = -1,
 		.charging_supported = true,
 		.remote_wakeup_supported = false,
 	},
@@ -387,7 +366,6 @@ static struct tegra_usb_platform_data tegra_ehci1_utmi_pdata = {
 	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
 	.op_mode = TEGRA_USB_OPMODE_HOST,
 	.u_data.host = {
-		.vbus_gpio = -1,
 		.hot_plug = true,
 		.remote_wakeup_supported = true,
 		.power_off_on_suspend = false,
@@ -413,7 +391,6 @@ static struct tegra_usb_platform_data tegra_ehci3_utmi_pdata = {
 	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
 	.op_mode = TEGRA_USB_OPMODE_HOST,
 	.u_data.host = {
-		.vbus_gpio = -1,
 		.hot_plug = true,
 		.remote_wakeup_supported = true,
 		.power_off_on_suspend = false,
@@ -494,7 +471,7 @@ struct spi_board_info rm31080a_roth_spi_board[1] = {
 static int __init roth_touch_init(void)
 {
 	struct board_info board_info;
-	int touch_panel_id = tegra_get_touch_panel_id();
+	int touch_panel_id = tegra_get_tp_id();
 
 	tegra_get_board_info(&board_info);
 	if (touch_panel_id == PANEL_TPK ||

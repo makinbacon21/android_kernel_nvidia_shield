@@ -39,6 +39,7 @@
 #include "devices.h"
 #include "gpio-names.h"
 #include "iomap.h"
+#include "board-common.h"
 #include "tegra11_host1x_devices.h"
 
 struct platform_device * __init roth_host1x_init(void)
@@ -586,7 +587,7 @@ fail:
 	return err;
 }
 
-static int roth_dsi_panel_disable(void)
+static int roth_dsi_panel_disable(struct device *dev)
 {
 	if (vdd_lcd_bl)
 		regulator_disable(vdd_lcd_bl);
@@ -681,7 +682,7 @@ static int roth_hdmi_enable(struct device *dev)
 	return 0;
 }
 
-static int roth_hdmi_disable(void)
+static int roth_hdmi_disable(struct device *dev)
 {
 	if (roth_hdmi_reg) {
 		regulator_disable(roth_hdmi_reg);
@@ -727,17 +728,25 @@ static int roth_hdmi_hotplug_init(struct device *dev)
 
 static void roth_hdmi_hotplug_report(bool state)
 {
-	if (state) {
-		tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_DDC_SDA,
-						TEGRA_PUPD_PULL_DOWN);
-		tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_DDC_SCL,
-						TEGRA_PUPD_PULL_DOWN);
-	} else {
-		tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_DDC_SDA,
-						TEGRA_PUPD_NORMAL);
-		tegra_pinmux_set_pullupdown(TEGRA_PINGROUP_DDC_SCL,
-						TEGRA_PUPD_NORMAL);
-	}
+	struct pinctrl_dev *pctl_dev;
+	unsigned long conf;
+	int val = (state) ? TEGRA_PIN_PULL_DOWN : TEGRA_PIN_PULL_NONE;
+	int ret;
+
+	pctl_dev = tegra_get_pinctrl_device_handle();
+	if (!pctl_dev)
+		return;
+
+	conf = TEGRA_PINCONF_PACK(TEGRA_PINCONF_PARAM_PULL, val);
+	ret = pinctrl_set_config_for_group_name(pctl_dev, "ddc_sda_pv5", conf);
+	if (ret < 0)
+		pr_err("%s(): ERROR: ddc_sda_pv5 config failed: %d\n",
+			__func__, ret);
+
+	ret = pinctrl_set_config_for_group_name(pctl_dev, "ddc_scl_pv4", conf);
+	if (ret < 0)
+		pr_err("%s(): ERROR: ddc_scl_pv4 config failed: %d\n",
+			__func__, ret);
 }
 
 static struct tegra_dc_out roth_disp2_out = {
@@ -943,7 +952,8 @@ int __init roth_panel_init(int board_id)
 		return err;
 	}
 
-	err = tegra_init_hdmi(&roth_disp2_device, phost1x);
+	roth_disp2_device.dev.parent = &phost1x->dev;
+	err = platform_device_register(&roth_disp2_device);
 	if (err)
 		return err;
 

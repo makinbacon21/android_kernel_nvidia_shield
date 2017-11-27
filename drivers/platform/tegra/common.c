@@ -215,6 +215,7 @@ static int battery_id;
 static struct board_info camera_board_info;
 static int touch_vendor_id;
 static int touch_panel_id;
+static int tp_id;
 static struct board_info io_board_info;
 static struct board_info button_board_info;
 static struct board_info joystick_board_info;
@@ -1240,6 +1241,18 @@ static int __init tegra_touch_id(char *options)
 	return 1;
 }
 __setup("touch_id=", tegra_touch_id);
+
+int tegra_get_tp_id(void)
+{
+	return tp_id;
+}
+static int __init tegra_tp_id(char *options)
+{
+	char *p = options;
+	tp_id = memparse(p, &p);
+	return 1;
+}
+__setup("tp_id=", tegra_tp_id);
 
 u8 get_power_config(void)
 {
