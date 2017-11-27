@@ -21,9 +21,7 @@
 #include <linux/irqchip/tegra.h>
 
 #include <mach/irqs.h>
-#include <mach/gpio-tegra.h>
-#include "board.h"
-#include "tegra-board-id.h"
+
 #include "gpio-names.h"
 #include "iomap.h"
 
@@ -205,18 +203,6 @@ int get_vbus_id_cable_connect_state(bool *is_vbus_connected,
 	return 0;
 }
 #endif
-
-void tegra_set_usb_wake_source(void)
-{
-	struct board_info board_info;
-
-	tegra_get_board_info(&board_info);
-	/* For Dalmore */
-	if (board_info.board_id == BOARD_E1611) {
-		tegra_wake_event_irq[41] = INT_USB3;
-		tegra_wake_event_irq[43] = -EINVAL;
-	}
-}
 
 static int __init tegra11x_wakeup_table_init(void)
 {

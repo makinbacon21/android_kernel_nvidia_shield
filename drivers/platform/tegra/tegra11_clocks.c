@@ -36,16 +36,17 @@
 #include <asm/clkdev.h>
 
 #include <mach/edp.h>
-#include <mach/mc.h>
 
-#include "clock.h"
+#include <linux/platform/tegra/mc.h>
+
+#include <linux/platform/tegra/clock.h>
+#include <linux/platform/tegra/dvfs.h>
 #include "iomap.h"
-#include "dvfs.h"
 #include "pm.h"
 #include "sleep.h"
 #include "devices.h"
-#include "tegra11_emc.h"
-#include "tegra_cl_dvfs.h"
+#include <linux/platform/tegra/tegra11_emc.h>
+#include <linux/platform/tegra/tegra_cl_dvfs.h>
 
 #define RST_DEVICES_L			0x004
 #define RST_DEVICES_H			0x008
