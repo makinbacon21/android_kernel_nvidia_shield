@@ -737,7 +737,9 @@ static void __init tegra_ramrepair_init(void)
 
 static void __init tegra_init_power(void)
 {
+#if defined(CONFIG_ARCH_TEGRA_HAS_SATA) || defined(CONFIG_ARCH_TEGRA_HAS_PCIE)
 	int partition_id;
+#endif
 #ifdef CONFIG_TEGRA_XUSB_PLATFORM
 	int partition_id_xusba, partition_id_xusbb, partition_id_xusbc;
 #endif
