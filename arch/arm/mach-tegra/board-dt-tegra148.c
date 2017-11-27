@@ -44,7 +44,6 @@ DT_MACHINE_START(TEGRA148_DT, "NVIDIA Tegra148 (Flattened Device Tree)")
 	.init_irq	= irqchip_init,
 	.init_time	= tegra_init_timer,
 	.init_machine	= tegra148_dt_init,
-	.restart	= tegra_assert_system_reset,
 	.dt_compat	= tegra148_dt_board_compat,
 MACHINE_END
 

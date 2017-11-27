@@ -29,8 +29,10 @@
 static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		12750,      /* SDRAM frequency */
 		900,       /* min voltage */
+		900,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x4000003e, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -225,8 +227,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		20400,      /* SDRAM frequency */
 		900,       /* min voltage */
+		900,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x40000026, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -421,8 +425,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		40800,      /* SDRAM frequency */
 		900,       /* min voltage */
+		900,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x40000012, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -617,8 +623,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		68000,      /* SDRAM frequency */
 		900,       /* min voltage */
+		900,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x4000000a, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -813,8 +821,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		102000,     /* SDRAM frequency */
 		900,       /* min voltage */
+		900,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x40000006, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -1009,8 +1019,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		204000,     /* SDRAM frequency */
 		900,       /* min voltage */
+		900,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x40000002, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -1205,8 +1217,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		312000,     /* SDRAM frequency */
 		1000,       /* min voltage */
+		1000,        /* gpu min voltage */
 		"pll_c",    /* clock source id */
 		0x24000002, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -1401,8 +1415,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		408000,     /* SDRAM frequency */
 		1000,       /* min voltage */
+		1000,        /* gpu min voltage */
 		"pll_p",    /* clock source id */
 		0x40000000, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -1597,8 +1613,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		450000,     /* SDRAM frequency */
 		1100,       /* min voltage */
+		1100,        /* gpu min voltage */
 		"pll_m",    /* clock source id */
 		0x00000002, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -1793,8 +1811,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		528000,     /* SDRAM frequency */
 		1100,       /* min voltage */
+		1100,        /* gpu min voltage */
 		"pll_m",    /* clock source id */
 		0x80000000, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -1989,8 +2009,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		624000,     /* SDRAM frequency */
 		1100,       /* min voltage */
+		1100,        /* gpu min voltage */
 		"pll_c",    /* clock source id */
 		0x24000000, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -2185,8 +2207,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		792000,     /* SDRAM frequency */
 		1100,       /* min voltage */
+		1100,        /* gpu min voltage */
 		"pll_m",    /* clock source id */
 		0x80000000, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */
@@ -2381,8 +2405,10 @@ static struct tegra11_emc_table h5tc4g63afr_pba_table[] = {
 	},
 	{
 		0x41,       /* Rev 4.0.3 */
+		"", /* DVFS table version */
 		900000,     /* SDRAM frequency */
 		1200,       /* min voltage */
+		1200,        /* gpu min voltage */
 		"pll_m",    /* clock source id */
 		0x80000000, /* CLK_SOURCE_EMC */
 		99,         /* number of burst_regs */

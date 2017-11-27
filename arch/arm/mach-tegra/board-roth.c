@@ -224,34 +224,6 @@ static void roth_i2c_init(void)
 	i2c_register_board_info(0, &roth_codec_tfa9887L_info, 1);
 }
 
-static struct platform_device *roth_uart_devices[] __initdata = {
-	&tegra_uarta_device,
-	&tegra_uartb_device,
-	&tegra_uartc_device,
-	&tegra_uartd_device,
-};
-
-static void __init uart_debug_init(void)
-{
-	int debug_port_id;
-
-	debug_port_id = uart_console_debug_init(3);
-	if (debug_port_id < 0)
-		return;
-
-	roth_uart_devices[debug_port_id] = uart_console_debug_device;
-}
-
-static void __init roth_uart_init(void)
-{
-	/* Register low speed only if it is selected */
-	if (!is_tegra_debug_uartport_hs())
-		uart_debug_init();
-
-	platform_add_devices(roth_uart_devices,
-				ARRAY_SIZE(roth_uart_devices));
-}
-
 static struct resource tegra_rtc_resources[] = {
 	[0] = {
 		.start = TEGRA_RTC_BASE,
@@ -265,7 +237,7 @@ static struct resource tegra_rtc_resources[] = {
 	},
 };
 
-static struct platform_device tegra_rtc_device = {
+struct platform_device tegra_rtc_device = {
 	.name = "tegra_rtc",
 	.id   = -1,
 	.resource = tegra_rtc_resources,
@@ -378,7 +350,6 @@ static struct platform_device *roth_devices[] __initdata = {
 	&spdif_dit_device,
 	&bluetooth_dit_device,
 	&roth_audio_device,
-	&tegra_hda_device,
 #if defined(CONFIG_CRYPTO_DEV_TEGRA_AES)
 	&tegra_aes_device,
 #endif
@@ -565,7 +536,6 @@ static void __init tegra_roth_init(void)
 	tegra_soc_device_init("roth");
 	roth_i2c_init();
 	roth_usb_init();
-	roth_uart_init();
 	roth_led_init();
 	roth_audio_init();
 	platform_add_devices(roth_devices, ARRAY_SIZE(roth_devices));
@@ -653,6 +623,5 @@ MACHINE_START(ROTH, "roth")
 	.init_irq	= irqchip_init,
 	.init_time	= clocksource_of_init,
 	.init_machine	= tegra_roth_dt_init,
-	.restart	= tegra_assert_system_reset,
 	.dt_compat	= roth_dt_board_compat,
 MACHINE_END
