@@ -20,6 +20,7 @@
 #ifndef __TEGRA_EMC_PDATA_H__
 #define __TEGRA_EMC_PDATA_H__
 
+#define TEGRA11_MAX_TABLE_ID_LEN	50
 #define TEGRA12_MAX_TABLE_ID_LEN	50
 
 #define TEGRA_EMC_MAX_FREQS 20
@@ -71,8 +72,10 @@ struct tegra30_emc_pdata {
 
 struct tegra11_emc_table {
 	u8 rev;
+	char table_id[TEGRA11_MAX_TABLE_ID_LEN];
 	unsigned long rate;
 	int emc_min_mv;
+	int gk20a_min_mv;
 	const char *src_name;
 	u32 src_sel_reg;
 
@@ -94,6 +97,11 @@ struct tegra11_emc_table {
 	u32 emc_zcal_cnt_long;
 	u32 emc_acal_interval;
 	u32 emc_cfg;
+	u32 emc_cfg_2;
+	u32 emc_sel_dpd_ctrl;
+	u32 emc_auto_cal_config2;
+	u32 emc_auto_cal_config3;
+	u32 emc_auto_cal_config;
 	u32 emc_mode_reset;
 	u32 emc_mode_1;
 	u32 emc_mode_2;
@@ -105,6 +113,7 @@ struct tegra11_emc_pdata {
 	const char *description;
 	int num_tables;
 	struct tegra11_emc_table *tables;
+	struct tegra11_emc_table *tables_derated;
 };
 
 #define TEGRA12_EMC_MAX_NUM_REGS 200
