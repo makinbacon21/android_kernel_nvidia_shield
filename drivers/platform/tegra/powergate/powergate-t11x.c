@@ -19,10 +19,11 @@
 #include <asm/atomic.h>
 
 #include "powergate-priv.h"
-#include "powergate-ops-txx.h"
 #include "powergate-ops-t1xx.h"
+#include <linux/platform/tegra/mc.h>
+#include <linux/tegra-fuse.h>
 
-enum mc_client {
+enum mc_client_type {
 	MC_CLIENT_AVPC		= 1,
 	MC_CLIENT_DC		= 2,
 	MC_CLIENT_DCB		= 3,
@@ -50,7 +51,7 @@ enum mc_client {
 };
 
 struct tegra11x_powergate_mc_client_info {
-	enum mc_client hot_reset_clients[MAX_HOTRESET_CLIENT_NUM];
+	enum mc_client_type hot_reset_clients[MAX_HOTRESET_CLIENT_NUM];
 };
 
 static struct tegra11x_powergate_mc_client_info tegra11x_pg_mc_info[] = {
@@ -278,28 +279,6 @@ bool tegra11x_powergate_check_clamping(int id)
 	return !!(pmc_read(PWRGATE_CLAMP_STATUS) & mask);
 }
 
-#define HOTRESET_READ_COUNT	5
-static bool tegra11x_stable_hotreset_check(u32 *stat)
-{
-	int i;
-	u32 cur_stat;
-	u32 prv_stat;
-	unsigned long flags;
-
-	spin_lock_irqsave(&tegra11x_powergate_lock, flags);
-	prv_stat = mc_read(MC_CLIENT_HOTRESET_STAT);
-	for (i = 0; i < HOTRESET_READ_COUNT; i++) {
-		cur_stat = mc_read(MC_CLIENT_HOTRESET_STAT);
-		if (cur_stat != prv_stat) {
-			spin_unlock_irqrestore(&tegra11x_powergate_lock, flags);
-			return false;
-		}
-	}
-	*stat = cur_stat;
-	spin_unlock_irqrestore(&tegra11x_powergate_lock, flags);
-	return true;
-}
-
 /*
  * FIXME: sw war for mipi-cal calibration when unpowergating DISA partition
  */
@@ -458,10 +437,9 @@ int tegra11x_powergate_mc_disable(int id)
 
 int tegra11x_powergate_mc_flush(int id)
 {
-	u32 idx, rst_ctrl, rst_stat;
-	enum mc_client mcClientBit;
-	unsigned long flags;
-	bool ret;
+	u32 idx;
+	enum mc_client_type mcClientBit;
+	bool ret = -EINVAL;
 
 	for (idx = 0; idx < MAX_HOTRESET_CLIENT_NUM; idx++) {
 		mcClientBit =
@@ -469,30 +447,17 @@ int tegra11x_powergate_mc_flush(int id)
 		if (mcClientBit == MC_CLIENT_LAST)
 			break;
 
-		spin_lock_irqsave(&tegra11x_powergate_lock, flags);
-		rst_ctrl = mc_read(MC_CLIENT_HOTRESET_CTRL);
-		rst_ctrl |= (1 << mcClientBit);
-		mc_write(rst_ctrl, MC_CLIENT_HOTRESET_CTRL);
-
-		spin_unlock_irqrestore(&tegra11x_powergate_lock, flags);
-
-		do {
-			udelay(10);
-			rst_stat = 0;
-			ret = tegra11x_stable_hotreset_check(&rst_stat);
-			if (!ret)
-				continue;
-		} while (!(rst_stat & (1 << mcClientBit)));
+		ret = tegra_mc_flush(mcClientBit);
 	}
 
-	return 0;
+	return ret;
 }
 
 int tegra11x_powergate_mc_flush_done(int id)
 {
-	u32 idx, rst_ctrl;
-	enum mc_client mcClientBit;
-	unsigned long flags;
+	u32 idx;
+	enum mc_client_type mcClientBit;
+	int ret = -EINVAL;
 
 	for (idx = 0; idx < MAX_HOTRESET_CLIENT_NUM; idx++) {
 		mcClientBit =
@@ -500,19 +465,12 @@ int tegra11x_powergate_mc_flush_done(int id)
 		if (mcClientBit == MC_CLIENT_LAST)
 			break;
 
-		spin_lock_irqsave(&tegra11x_powergate_lock, flags);
-
-		rst_ctrl = mc_read(MC_CLIENT_HOTRESET_CTRL);
-		rst_ctrl &= ~(1 << mcClientBit);
-		mc_write(rst_ctrl, MC_CLIENT_HOTRESET_CTRL);
-		mc_read(MC_CLIENT_HOTRESET_CTRL);
-
-		spin_unlock_irqrestore(&tegra11x_powergate_lock, flags);
+		ret = tegra_mc_flush_done(mcClientBit);
 	}
 
 	wmb();
 
-	return 0;
+	return ret;
 }
 
 static int tegra11x_unpowergate(int id,
