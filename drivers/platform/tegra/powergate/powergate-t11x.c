@@ -618,13 +618,13 @@ int tegra11x_unpowergate_partition(int id)
 
 int tegra11x_powergate_partition_with_clk_off(int id)
 {
-	return tegraxx_powergate_partition_with_clk_off(id,
+	return tegra1xx_powergate_partition_with_clk_off(id,
 		&tegra11x_powergate_partition_info[id]);
 }
 
 int tegra11x_unpowergate_partition_with_clk_on(int id)
 {
-	return tegraxx_unpowergate_partition_with_clk_on(id,
+	return tegra1xx_unpowergate_partition_with_clk_on(id,
 		&tegra11x_powergate_partition_info[id]);
 }
 
