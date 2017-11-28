@@ -476,7 +476,7 @@ static int __init roth_touch_init(void)
 	tegra_get_board_info(&board_info);
 	if (touch_panel_id == PANEL_TPK ||
 			touch_panel_id == PANEL_WINTEK) {
-		int err;
+		/*int err;
 		err = gpio_request(TOUCH_GPIO_CLK, "touch-gpio-clk");
 		if (err < 0)
 			pr_err("%s: gpio_request failed %d\n",
@@ -493,7 +493,7 @@ static int __init roth_touch_init(void)
 		tegra_pinmux_set_tristate(TOUCH_GPIO_CLK_PG,
 						TEGRA_TRI_TRISTATE);
 		rm31080ts_roth_data.name_of_clock = NULL;
-		rm31080ts_roth_data.name_of_clock_con = NULL;
+		rm31080ts_roth_data.name_of_clock_con = NULL;*/
 	} else
 		tegra_clk_init_from_table(touch_clk_init_table);
 	rm31080a_roth_spi_board[0].irq =
