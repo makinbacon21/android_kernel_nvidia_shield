@@ -44,6 +44,13 @@ config ANDROID_BINDER_IPC_32BIT
 
 	  Note that enabling this will break newer Android user-space.
 
+config ANDROID_BINDER_IPC_DISABLE_PREEMPT
+	bool "Disable binder preempt disabling"
+	depends on ANDROID_BINDER_IPC
+	default y
+	---help---
+	  Allow disabling preempt during binder transactions
+
 endif # if ANDROID
 
 endmenu

@@ -428,9 +428,13 @@ static int task_get_unused_fd_flags(struct binder_proc *proc, int flags)
 	rlim_cur = task_rlimit(proc->tsk, RLIMIT_NOFILE);
 	unlock_task_sighand(proc->tsk, &irqs);
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable_no_resched();
+#endif
 	ret = __alloc_fd(files, 0, rlim_cur, flags);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 
 	return ret;
 }
@@ -442,9 +446,13 @@ static void task_fd_install(
 	struct binder_proc *proc, unsigned int fd, struct file *file)
 {
 	if (proc->files) {
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 		preempt_enable_no_resched();
+#endif
 		__fd_install(proc->files, fd, file);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 		preempt_disable();
+#endif
 	}
 }
 
@@ -473,7 +481,9 @@ static inline void binder_lock(struct binder_context *context, const char *tag)
 {
 	trace_binder_lock(tag);
 	mutex_lock(&context->binder_main_lock);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 	trace_binder_locked(tag);
 }
 
@@ -482,7 +492,9 @@ static inline void binder_unlock(struct binder_context *context,
 {
 	trace_binder_unlock(tag);
 	mutex_unlock(&context->binder_main_lock);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable();
+#endif
 }
 
 static inline void *kzalloc_preempt_disabled(size_t size)
@@ -493,9 +505,13 @@ static inline void *kzalloc_preempt_disabled(size_t size)
 	if (ptr)
 		return ptr;
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable_no_resched();
+#endif
 	ptr = kzalloc(size, GFP_KERNEL);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 
 	return ptr;
 }
@@ -504,9 +520,13 @@ static inline long copy_to_user_preempt_disabled(void __user *to, const void *fr
 {
 	long ret;
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable_no_resched();
+#endif
 	ret = copy_to_user(to, from, n);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 	return ret;
 }
 
@@ -514,12 +534,17 @@ static inline long copy_from_user_preempt_disabled(void *to, const void __user *
 {
 	long ret;
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable_no_resched();
+#endif
 	ret = copy_from_user(to, from, n);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 	return ret;
 }
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 #define get_user_preempt_disabled(x, ptr)	\
 ({						\
 	int __ret;				\
@@ -537,6 +562,17 @@ static inline long copy_from_user_preempt_disabled(void *to, const void __user *
 	preempt_disable();			\
 	__ret;					\
 })
+#else
+#define get_user_preempt_disabled(x, ptr)	\
+({						\
+	get_user(x, ptr);			\
+})
+
+#define put_user_preempt_disabled(x, ptr)	\
+({						\
+	put_user(x, ptr);			\
+})
+#endif
 
 static void binder_set_nice(long nice)
 {
@@ -671,7 +707,9 @@ static int binder_update_page_range(struct binder_proc *proc, int allocate,
 	else
 		mm = get_task_mm(proc->tsk);
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable_no_resched();
+#endif
 
 	if (mm) {
 		down_write(&mm->mmap_sem);
@@ -729,7 +767,9 @@ static int binder_update_page_range(struct binder_proc *proc, int allocate,
 		mmput(mm);
 	}
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 
 	return 0;
 
@@ -754,7 +794,9 @@ err_no_vma:
 		mmput(mm);
 	}
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_disable();
+#endif
 
 	return -ENOMEM;
 }
@@ -3508,10 +3550,14 @@ static int binder_mmap(struct file *filp, struct vm_area_struct *vma)
 	vma->vm_ops = &binder_vm_ops;
 	vma->vm_private_data = proc;
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	/* binder_update_page_range assumes preemption is disabled */
 	preempt_disable();
+#endif
 	ret = binder_update_page_range(proc, 1, proc->buffer, proc->buffer + PAGE_SIZE, vma);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 	preempt_enable_no_resched();
+#endif
 	if (ret) {
 		ret = -ENOMEM;
 		failure_string = "alloc small buf";
@@ -3806,7 +3852,9 @@ static void binder_deferred_func(struct work_struct *work)
 		trace_binder_locked(__func__);
 
 		mutex_lock(&context->binder_deferred_lock);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 		preempt_disable();
+#endif
 		if (!hlist_empty(&context->binder_deferred_list)) {
 			proc = hlist_entry(context->binder_deferred_list.first,
 					   struct binder_proc,
@@ -3835,7 +3883,9 @@ static void binder_deferred_func(struct work_struct *work)
 
 		trace_binder_unlock(__func__);
 		mutex_unlock(&context->binder_main_lock);
+#ifdef CONFIG_ANDROID_BINDER_IPC_DISABLE_PREEMPT
 		preempt_enable_no_resched();
+#endif
 		if (files)
 			put_files_struct(files);
 	} while (proc);
