@@ -43,7 +43,7 @@
 	firmware {
 		android {
 			compatible = "android,firmware";
-			hardware = "tn8";
+			hardware = "jetson-tk1";
 		};
 	};
 
