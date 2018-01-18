@@ -1,0 +1,30 @@
+#include "tegra124-jetson_tk1-pm375-000-c00-00.dts"
+
+/ {
+	nvidia,dtsfilename = __FILE__;
+
+	host1x {
+		/* tegradc.0 */
+		dc@54200000 {
+			status = "okay";
+			nvidia,dc-flags = <TEGRA_DC_FLAG_ENABLED>;
+			nvidia,emc-clk-rate = <300000000>;
+			nvidia,fb-bpp = <32>; /* bits per pixel */
+			nvidia,fb-flags = <TEGRA_FB_FLIP_ON_PROBE>;
+			nvidia,dc-or-node = "/host1x/sor1";
+			avdd_hdmi-supply = <&as3722_sd4>;
+			avdd_hdmi_pll-supply = <&avdd_hdmi_pll>;
+			vdd_hdmi_5v0-supply = <&vdd_hdmi>;
+		};
+		/* tegradc.1 */
+		dc@54240000 {
+			status = "disabled";
+		};
+		dsi {
+			panel-p-wuxga-10-1 {
+				status = "disabled";
+			};
+		};
+        };
+
+};
