@@ -1,0 +1,21 @@
+#include "tegra124-jetson_tk1-pm375-000-c00-00.dts"
+
+/ {
+	nvidia,dtsfilename = __FILE__;
+
+	host1x {
+		/* tegradc.0 */
+		dc@54200000 {
+			status = "disabled";
+		};
+		/* tegradc.1 */
+		dc@54240000 {
+			status = "okay";
+		};
+		dsi {
+			panel-p-wuxga-10-1 {
+				status = "disabled";
+			};
+		};
+        };
+};
