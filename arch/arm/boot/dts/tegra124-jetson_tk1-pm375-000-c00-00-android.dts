@@ -3,6 +3,10 @@
 / {
 	nvidia,dtsfilename = __FILE__;
 
+	nvidia,boardids = "1761:1270:4";
+	nvidia,proc-boardid = "1784:1100:00";
+	nvidia,pmu-boardid = "1936:1000:00";
+
 	host1x {
 		/* tegradc.0 */
 		dc@54200000 {
