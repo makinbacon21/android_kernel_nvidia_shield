@@ -80,6 +80,7 @@ obj-$(CONFIG_TEGRA_EDP_LIMITS)          += cpu-edp.o # must precede cpu-tegra.o
 obj-$(CONFIG_CPU_FREQ)                  += cpu-tegra.o
 ifeq ($(CONFIG_CPU_FREQ),y)
 ifeq ($(CONFIG_TEGRA_CLK_FRAMEWORK),y)
+obj-$(CONFIG_ARCH_TEGRA_11x_SOC) += cpu-tegra11.o
 obj-$(CONFIG_ARCH_TEGRA_12x_SOC) += cpu-tegra12.o
 obj-$(CONFIG_ARCH_TEGRA_21x_SOC) += cpu-tegra21.o
 endif
