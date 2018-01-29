@@ -8073,9 +8073,6 @@ void __init tegra11x_init_clocks(void)
 		clkdev_add(&tegra_clk_duplicates[i].lookup);
 	}
 
-	/* Initialize to default */
-	tegra_init_cpu_edp_limits(0);
-
 	tegra11_cpu_car_ops_init();
 
 #ifdef CONFIG_PM_SLEEP

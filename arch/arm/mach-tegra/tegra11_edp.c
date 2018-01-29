@@ -27,6 +27,9 @@
 
 #include <mach/edp.h>
 
+#include <linux/platform/tegra/common.h>
+#include <linux/platform/tegra/clock.h>
+
 #define CORE_MODULES_STATES 1
 #define TEMPERATURE_RANGES 4
 #define CAP_CLKS_NUM 2

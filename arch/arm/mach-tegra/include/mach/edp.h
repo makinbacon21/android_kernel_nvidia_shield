@@ -27,10 +27,6 @@
 #error "tegra3x: no support"
 #endif
 
-#ifdef CONFIG_ARCH_TEGRA_11x_SOC
-#error "tegra11x: no support"
-#endif
-
 #ifdef CONFIG_ARCH_TEGRA_14x_SOC
 #error "tegra14x: no support"
 #endif
@@ -145,6 +141,11 @@ static inline int tegra_core_edp_cpu_state_update(bool scpu_state)
 { return 0; }
 static inline struct tegra_cooling_device *tegra_core_edp_get_cdev(void)
 { return NULL; }
+#endif
+
+#ifdef CONFIG_ARCH_TEGRA_11x_SOC
+int tegra11x_select_core_edp_table(unsigned int regulator_mA,
+				   struct tegra_core_edp_limits *limits);
 #endif
 
 #ifdef CONFIG_SYSEDP_FRAMEWORK
