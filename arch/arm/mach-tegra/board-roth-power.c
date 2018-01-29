@@ -753,27 +753,6 @@ int __init roth_suspend_init(void)
 	return 0;
 }
 
-int __init roth_edp_init(void)
-{
-	unsigned int regulator_mA;
-
-	regulator_mA = get_maximum_cpu_current_supported();
-	if (!regulator_mA)
-		regulator_mA = 15000;
-
-	pr_info("%s: CPU regulator %d mA\n", __func__, regulator_mA);
-	tegra_init_cpu_edp_limits(regulator_mA);
-
-	regulator_mA = get_maximum_core_current_supported();
-	if (!regulator_mA)
-		regulator_mA = 4000;
-
-	pr_info("%s: core regulator %d mA\n", __func__, regulator_mA);
-	tegra_init_core_edp_limits(regulator_mA);
-
-	return 0;
-}
-
 static struct tegra_thermtrip_pmic_data tpdata_palmas = {
 	.reset_tegra = 1,
 	.pmu_16bit_ops = 0,

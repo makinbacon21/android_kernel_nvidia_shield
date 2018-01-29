@@ -107,7 +107,6 @@ int roth_suspend_init(void);
 int roth_sdhci_init(void);
 int roth_sensors_init(void);
 int roth_emc_init(void);
-int roth_edp_init(void);
 int roth_panel_init(int board_id);
 int roth_kbc_init(void);
 int roth_soctherm_init(void);
