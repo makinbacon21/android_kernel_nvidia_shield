@@ -42,6 +42,7 @@
 #include "nvhost_acm.h"
 #include "chip_support.h"
 #include "nvhost_intr.h"
+#include "t114/t114.h"
 #include "t124/t124.h"
 #include "t210/t210.h"
 #include "nvhost_job.h"
@@ -742,6 +743,10 @@ int nvhost_tsec_prepare_poweroff(struct platform_device *dev)
 
 
 static struct of_device_id tegra_tsec_of_match[] = {
+#ifdef TEGRA_11X_OR_HIGHER_CONFIG
+	{ .compatible = "nvidia,tegra114-tsec",
+		.data = (struct nvhost_device_data *)&t11_tsec_info },
+#endif
 #ifdef TEGRA_12X_OR_HIGHER_CONFIG
 	{ .compatible = "nvidia,tegra124-tsec",
 		.data = (struct nvhost_device_data *)&t124_tsec_info },
