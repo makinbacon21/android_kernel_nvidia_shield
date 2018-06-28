@@ -233,7 +233,6 @@ static struct platform_device loki_audio_device_rt5639 = {
 
 static struct platform_device *loki_devices[] __initdata = {
 	&tegra_rtc_device,
-	&tegra_udc_device,
 #if defined(CONFIG_CRYPTO_DEV_TEGRA_SE) && !defined(CONFIG_USE_OF)
 	&tegra12_se_device,
 #endif
@@ -251,107 +250,6 @@ static struct platform_device *loki_devices[] __initdata = {
 	&baseband_dit_device,
 	&tegra_offload_device,
 	&tegra30_avp_audio_device,
-};
-
-static struct tegra_usb_platform_data tegra_udc_pdata = {
-	.port_otg = true,
-	.has_hostpc = true,
-	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
-	.op_mode = TEGRA_USB_OPMODE_DEVICE,
-	.u_data.dev = {
-		.vbus_pmu_irq = 0,
-		.dcp_current_limit_ma = 2000,
-		.charging_supported = true,
-		.remote_wakeup_supported = false,
-	},
-	.u_cfg.utmi = {
-		.hssync_start_delay = 0,
-		.elastic_limit = 16,
-		.idle_wait_delay = 17,
-		.term_range_adj = 6,
-		.xcvr_setup = 8,
-		.xcvr_lsfslew = 2,
-		.xcvr_lsrslew = 2,
-		.xcvr_setup_offset = 0,
-		.xcvr_use_fuses = 1,
-	},
-};
-
-static struct tegra_usb_platform_data tegra_ehci1_utmi_pdata = {
-	.port_otg = true,
-	.has_hostpc = true,
-	.unaligned_dma_buf_supported = false,
-	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
-	.op_mode = TEGRA_USB_OPMODE_HOST,
-	.u_data.host = {
-		.hot_plug = false,
-		.remote_wakeup_supported = true,
-		.power_off_on_suspend = true,
-		.turn_off_vbus_on_lp0 = true,
-	},
-	.u_cfg.utmi = {
-		.hssync_start_delay = 0,
-		.elastic_limit = 16,
-		.idle_wait_delay = 17,
-		.term_range_adj = 6,
-		.xcvr_setup = 15,
-		.xcvr_lsfslew = 0,
-		.xcvr_lsrslew = 3,
-		.xcvr_setup_offset = 0,
-		.xcvr_use_fuses = 0,
-		.vbus_oc_map = 0x4,
-		.xcvr_hsslew_lsb = 2,
-	},
-};
-
-static struct tegra_usb_platform_data tegra_ehci2_utmi_pdata = {
-	.port_otg = false,
-	.has_hostpc = true,
-	.unaligned_dma_buf_supported = false,
-	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
-	.op_mode = TEGRA_USB_OPMODE_HOST,
-	.u_data.host = {
-		.hot_plug = false,
-		.remote_wakeup_supported = true,
-		.power_off_on_suspend = true,
-	},
-	.u_cfg.utmi = {
-		.hssync_start_delay = 0,
-		.elastic_limit = 16,
-		.idle_wait_delay = 17,
-		.term_range_adj = 6,
-		.xcvr_setup = 8,
-		.xcvr_lsfslew = 2,
-		.xcvr_lsrslew = 2,
-		.xcvr_setup_offset = 0,
-		.xcvr_use_fuses = 1,
-		.vbus_oc_map = 0x5,
-	},
-};
-
-static struct tegra_usb_platform_data tegra_ehci3_utmi_pdata = {
-	.port_otg = false,
-	.has_hostpc = true,
-	.unaligned_dma_buf_supported = false,
-	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
-	.op_mode = TEGRA_USB_OPMODE_HOST,
-	.u_data.host = {
-		.hot_plug = false,
-		.remote_wakeup_supported = true,
-		.power_off_on_suspend = true,
-	},
-	.u_cfg.utmi = {
-	.hssync_start_delay = 0,
-		.elastic_limit = 16,
-		.idle_wait_delay = 17,
-		.term_range_adj = 6,
-		.xcvr_setup = 8,
-		.xcvr_lsfslew = 2,
-		.xcvr_lsrslew = 2,
-		.xcvr_setup_offset = 0,
-		.xcvr_use_fuses = 1,
-		.vbus_oc_map = 0x5,
-	},
 };
 
 static struct gpio modem_gpios[] = { /* Bruce modem */
@@ -384,59 +282,6 @@ static struct tegra_usb_platform_data tegra_ehci2_hsic_smsc_hub_pdata = {
 	},
 };
 
-
-static struct tegra_usb_otg_data tegra_otg_pdata = {
-	.ehci_device = &tegra_ehci1_device,
-	.ehci_pdata = &tegra_ehci1_utmi_pdata,
-};
-
-static void loki_usb_init(void)
-{
-	int usb_port_owner_info = tegra_get_usb_port_owner_info();
-	int modem_id = tegra_get_modem_id();
-	int rc = 0;
-
-	/* Device cable is detected through PMU Interrupt */
-	tegra_udc_pdata.support_pmu_vbus = true;
-	tegra_udc_pdata.vbus_extcon_dev_name = "palmas-extcon";
-	tegra_ehci1_utmi_pdata.support_pmu_vbus = true;
-	tegra_ehci1_utmi_pdata.vbus_extcon_dev_name = "palmas-extcon";
-
-	if (board_info.board_id == BOARD_P2530 &&
-		board_info.sku == BOARD_SKU_FOSTER &&
-		board_info.fab >= 0xC0) {
-		rc = gpio_request(TEGRA_GPIO_PK5, "r8152_rst");
-		if (rc)
-			pr_warn("RTL8152 gpio request failed:%d\n", rc);
-		rc = gpio_direction_output(TEGRA_GPIO_PK5, 0);
-		if (rc)
-			pr_warn("RTL8152 gpio direction failed:%d\n", rc);
-		rc = gpio_direction_output(TEGRA_GPIO_PK5, 1);
-		if (rc)
-			pr_warn("RTL8152 gpio direction failed:%d\n", rc);
-	}
-
-	/* Enable Y-Cable support */
-	tegra_ehci1_utmi_pdata.u_data.host.support_y_cable = true;
-
-	if (!(usb_port_owner_info & UTMI1_PORT_OWNER_XUSB)) {
-		tegra_otg_device.dev.platform_data = &tegra_otg_pdata;
-		platform_device_register(&tegra_otg_device);
-		/* Setup the udc platform data */
-		tegra_udc_device.dev.platform_data = &tegra_udc_pdata;
-	}
-	if (!(usb_port_owner_info & UTMI2_PORT_OWNER_XUSB)) {
-		if (!modem_id) {
-			tegra_ehci2_device.dev.platform_data =
-				&tegra_ehci2_utmi_pdata;
-			platform_device_register(&tegra_ehci2_device);
-		}
-	}
-	if (!(usb_port_owner_info & UTMI3_PORT_OWNER_XUSB)) {
-		tegra_ehci3_device.dev.platform_data = &tegra_ehci3_utmi_pdata;
-		platform_device_register(&tegra_ehci3_device);
-	}
-}
 
 static struct tegra_xusb_platform_data xusb_pdata = {
 	.portmap = TEGRA_XUSB_SS_P0 | TEGRA_XUSB_USB2_P0 | TEGRA_XUSB_SS_P1 |
@@ -593,6 +438,10 @@ static void loki_modem_init(void)
 #ifdef CONFIG_USE_OF
 struct of_dev_auxdata loki_auxdata_lookup[] __initdata = {
 	OF_DEV_AUXDATA("nvidia,tegra124-se", 0x70012000, "tegra12-se", NULL),
+	OF_DEV_AUXDATA("nvidia,tegra124-udc", TEGRA_USB_BASE, "tegra-udc.0",
+			NULL),
+	OF_DEV_AUXDATA("nvidia,tegra124-otg", TEGRA_USB_BASE, "tegra-otg",
+			NULL),
 	OF_DEV_AUXDATA("nvidia,tegra124-host1x", TEGRA_HOST1X_BASE, "host1x",
 		NULL),
 	OF_DEV_AUXDATA("nvidia,tegra124-gk20a", TEGRA_GK20A_BAR0_BASE,
@@ -775,7 +624,6 @@ static void __init tegra_loki_late_init(void)
 		board_info.fab, board_info.major_revision,
 		board_info.minor_revision);
 	loki_revision_init(&board_info);
-	loki_usb_init();
 	loki_modem_init();
 	loki_xusb_init();
 	loki_i2c_init();
