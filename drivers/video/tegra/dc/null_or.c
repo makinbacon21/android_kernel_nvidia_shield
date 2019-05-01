@@ -280,6 +280,7 @@ struct tegra_dc_out_ops tegra_dc_null_ops = {
 
 static int tegra_dc_add_fakedisp_resources(struct platform_device *ndev)
 {
+#ifndef CONFIG_TEGRA_HDMI_PRIMARY
 	/* Copy the existing fbmem resources locally
 	 * and replace the existing resource pointer
 	 * with local array
@@ -300,6 +301,7 @@ static int tegra_dc_add_fakedisp_resources(struct platform_device *ndev)
 	}
 	ndev->resource = all_disp1_resources;
 	ndev->num_resources = ARRAY_SIZE(all_disp1_resources);
+#endif
 
 	return 0;
 }

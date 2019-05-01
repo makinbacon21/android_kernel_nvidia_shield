@@ -106,6 +106,7 @@ static struct resource all_disp1_resources[] = {
 static int tegra_dc_add_fakedisp_resources(struct platform_device *ndev,
 						long dc_outtype)
 {
+#ifndef CONFIG_TEGRA_HDMI_PRIMARY
 	/* Copy the existing fbmem resources locally
 	 * and replace the existing resource pointer
 	 * with local array
@@ -140,6 +141,7 @@ static int tegra_dc_add_fakedisp_resources(struct platform_device *ndev,
 			}
 		}
 	}
+#endif
 	return 0;
 }
 
