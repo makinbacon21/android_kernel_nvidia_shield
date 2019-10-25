@@ -30,7 +30,7 @@
 #include "tegra124-platforms/tegra124-yellowstone-sysedp.dtsi"
 #include "tegra124-platforms/tegra124-yellowstone-powermon.dtsi"
 #include "tegra124-platforms/tegra124-yellowstone-dfll.dtsi"
-//#include "panel-j-wuxga-7.dtsi"
+#include "panel-j-wuxga-7.dtsi"
 #include "tegra124-platforms/tegra124-yellowstone-hdmi.dtsi"
 #include <dt-bindings/iio/meter/ina3221x.h>
 #include "tegra124-platforms/tegra124-yellowstone-comms.dtsi"
@@ -120,6 +120,7 @@
 				nvidia,panel-rst-gpio = <&gpio TEGRA_GPIO(H, 3) 0>;
 				nvidia,panel-bl-pwm-gpio = <&gpio TEGRA_GPIO(H, 1) 0>;
 				nvidia,dsi-te-gpio = <&gpio TEGRA_GPIO(R, 6) 0>;
+				status = "okay";
 			};
 		};
 	};
@@ -134,6 +135,10 @@
 	backlight {
 		status = "okay";
 		compatible = "pwm-backlight";
+
+		panel-j-wuxga-7-bl {
+			status = "okay";
+		};
 	};
 
 	vibrator {
