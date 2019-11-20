@@ -1,28 +1,29 @@
 /*
  * Tegra GK20A GPU Debugger Driver Register Ops
  *
- * Copyright (c) 2013-2014, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2013-2018, NVIDIA CORPORATION.  All rights reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
-#include <linux/slab.h>
-#include <linux/err.h>
-#include <linux/bsearch.h>
-#include <uapi/linux/nvgpu.h>
+#include <nvgpu/gk20a.h>
 
-#include "gk20a/gk20a.h"
-#include "gk20a/dbg_gpu_gk20a.h"
 #include "gk20a/regops_gk20a.h"
 #include "regops_gm20b.h"
 
@@ -258,7 +259,7 @@ static const struct regop_offset_range gm20b_global_whitelist_ranges[] = {
 	{ 0x00504eb0,   1 },
 	{ 0x00504ef0,  28 },
 };
-static const u32 gm20b_global_whitelist_ranges_count =
+static const u64 gm20b_global_whitelist_ranges_count =
 	ARRAY_SIZE(gm20b_global_whitelist_ranges);
 
 /* context */
@@ -266,7 +267,12 @@ static const u32 gm20b_global_whitelist_ranges_count =
 static const struct regop_offset_range gm20b_context_whitelist_ranges[] = {
 	{ 0x0000259c,   1 },
 	{ 0x0000280c,   1 },
+	{ 0x00140028,   1 },
+	{ 0x00180040,  52 },
+	{ 0x001a0040,  52 },
+	{ 0x001b0040,  52 },
 	{ 0x00400500,   1 },
+	{ 0x0040415c,   1 },
 	{ 0x00405b40,   1 },
 	{ 0x00418e00,   1 },
 	{ 0x00418e34,   1 },
@@ -321,6 +327,7 @@ static const struct regop_offset_range gm20b_context_whitelist_ranges[] = {
 	{ 0x00503ee8,   2 },
 	{ 0x00504490,   1 },
 	{ 0x00504508,   2 },
+	{ 0x00504600,   4 },
 	{ 0x00504604,   3 },
 	{ 0x00504614,   6 },
 	{ 0x00504634,   2 },
@@ -342,7 +349,7 @@ static const struct regop_offset_range gm20b_context_whitelist_ranges[] = {
 	{ 0x00504ee8,   1 },
 	{ 0x00504ef0,  28 },
 };
-static const u32 gm20b_context_whitelist_ranges_count =
+static const u64 gm20b_context_whitelist_ranges_count =
 	ARRAY_SIZE(gm20b_context_whitelist_ranges);
 
 /* runcontrol */
@@ -354,131 +361,51 @@ static const u32 gm20b_runcontrol_whitelist[] = {
 	0x00504610,
 	0x00504e10,
 };
-static const u32 gm20b_runcontrol_whitelist_count =
+static const u64 gm20b_runcontrol_whitelist_count =
 	ARRAY_SIZE(gm20b_runcontrol_whitelist);
-
-static const struct regop_offset_range gm20b_runcontrol_whitelist_ranges[] = {
-	{ 0x00419e10,   1 },
-	{ 0x0041c610,   1 },
-	{ 0x0041ce10,   1 },
-	{ 0x00501e10,   1 },
-	{ 0x00504610,   1 },
-	{ 0x00504e10,   1 },
-};
-static const u32 gm20b_runcontrol_whitelist_ranges_count =
-	ARRAY_SIZE(gm20b_runcontrol_whitelist_ranges);
-
 
 /* quad ctl */
 static const u32 gm20b_qctl_whitelist[] = {
 };
-static const u32 gm20b_qctl_whitelist_count =
+static const u64 gm20b_qctl_whitelist_count =
 	ARRAY_SIZE(gm20b_qctl_whitelist);
 
-static const struct regop_offset_range gm20b_qctl_whitelist_ranges[] = {
-};
-static const u32 gm20b_qctl_whitelist_ranges_count =
-	ARRAY_SIZE(gm20b_qctl_whitelist_ranges);
-
-static const struct regop_offset_range *gm20b_get_global_whitelist_ranges(void)
+const struct regop_offset_range *gm20b_get_global_whitelist_ranges(void)
 {
 	return gm20b_global_whitelist_ranges;
 }
 
-static int gm20b_get_global_whitelist_ranges_count(void)
+u64 gm20b_get_global_whitelist_ranges_count(void)
 {
 	return gm20b_global_whitelist_ranges_count;
 }
 
-static const struct regop_offset_range *gm20b_get_context_whitelist_ranges(void)
+const struct regop_offset_range *gm20b_get_context_whitelist_ranges(void)
 {
 	return gm20b_context_whitelist_ranges;
 }
 
-static int gm20b_get_context_whitelist_ranges_count(void)
+u64 gm20b_get_context_whitelist_ranges_count(void)
 {
 	return gm20b_context_whitelist_ranges_count;
 }
 
-static const u32 *gm20b_get_runcontrol_whitelist(void)
+const u32 *gm20b_get_runcontrol_whitelist(void)
 {
 	return gm20b_runcontrol_whitelist;
 }
 
-static int gm20b_get_runcontrol_whitelist_count(void)
+u64 gm20b_get_runcontrol_whitelist_count(void)
 {
 	return gm20b_runcontrol_whitelist_count;
 }
 
-static const
-struct regop_offset_range *gm20b_get_runcontrol_whitelist_ranges(void)
-{
-	return gm20b_runcontrol_whitelist_ranges;
-}
-
-static int gm20b_get_runcontrol_whitelist_ranges_count(void)
-{
-	return gm20b_runcontrol_whitelist_ranges_count;
-}
-
-static const u32 *gm20b_get_qctl_whitelist(void)
+const u32 *gm20b_get_qctl_whitelist(void)
 {
 	return gm20b_qctl_whitelist;
 }
 
-static int gm20b_get_qctl_whitelist_count(void)
+u64 gm20b_get_qctl_whitelist_count(void)
 {
 	return gm20b_qctl_whitelist_count;
-}
-
-static const struct regop_offset_range *gm20b_get_qctl_whitelist_ranges(void)
-{
-	return gm20b_qctl_whitelist_ranges;
-}
-
-static int gm20b_get_qctl_whitelist_ranges_count(void)
-{
-	return gm20b_qctl_whitelist_ranges_count;
-}
-
-static int gm20b_apply_smpc_war(struct dbg_session_gk20a *dbg_s)
-{
-	/* Not needed on gm20b */
-	return 0;
-}
-
-void gm20b_init_regops(struct gpu_ops *gops)
-{
-	gops->regops.get_global_whitelist_ranges =
-		gm20b_get_global_whitelist_ranges;
-	gops->regops.get_global_whitelist_ranges_count =
-		gm20b_get_global_whitelist_ranges_count;
-
-	gops->regops.get_context_whitelist_ranges =
-		gm20b_get_context_whitelist_ranges;
-	gops->regops.get_context_whitelist_ranges_count =
-		gm20b_get_context_whitelist_ranges_count;
-
-	gops->regops.get_runcontrol_whitelist =
-		gm20b_get_runcontrol_whitelist;
-	gops->regops.get_runcontrol_whitelist_count =
-		gm20b_get_runcontrol_whitelist_count;
-
-	gops->regops.get_runcontrol_whitelist_ranges =
-		gm20b_get_runcontrol_whitelist_ranges;
-	gops->regops.get_runcontrol_whitelist_ranges_count =
-		gm20b_get_runcontrol_whitelist_ranges_count;
-
-	gops->regops.get_qctl_whitelist =
-		gm20b_get_qctl_whitelist;
-	gops->regops.get_qctl_whitelist_count =
-		gm20b_get_qctl_whitelist_count;
-
-	gops->regops.get_qctl_whitelist_ranges =
-		gm20b_get_qctl_whitelist_ranges;
-	gops->regops.get_qctl_whitelist_ranges_count =
-		gm20b_get_qctl_whitelist_ranges_count;
-
-	gops->regops.apply_smpc_war =
-		gm20b_apply_smpc_war;
 }

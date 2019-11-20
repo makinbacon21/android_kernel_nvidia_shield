@@ -1,42 +1,49 @@
 /*
- * Virtualized GPU
+ * Copyright (c) 2014-2018, NVIDIA CORPORATION.  All rights reserved.
  *
- * Copyright (c) 2014-2015, NVIDIA CORPORATION.  All rights reserved.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
-#include <linux/kthread.h>
-#include <linux/delay.h>
-#include <linux/dma-mapping.h>
-#include <linux/pm_runtime.h>
-#include "vgpu/vgpu.h"
-#include "gk20a/debug_gk20a.h"
-#include "gk20a/hal_gk20a.h"
-#include "gk20a/hw_mc_gk20a.h"
+#include <nvgpu/enabled.h>
+#include <nvgpu/ptimer.h>
+#include <nvgpu/vgpu/vgpu_ivc.h>
+#include <nvgpu/vgpu/vgpu.h>
+#include <nvgpu/timers.h>
+#include <nvgpu/channel.h>
+#include <nvgpu/clk_arb.h>
 
-static inline int vgpu_comm_init(struct platform_device *pdev)
+#include "gk20a/gk20a.h"
+#include "fecs_trace_vgpu.h"
+
+int vgpu_comm_init(struct gk20a *g)
 {
 	size_t queue_sizes[] = { TEGRA_VGPU_QUEUE_SIZES };
 
-	return tegra_gr_comm_init(pdev, TEGRA_GR_COMM_CTX_CLIENT, 3,
-				queue_sizes, TEGRA_VGPU_QUEUE_CMD,
+	return vgpu_ivc_init(g, 3, queue_sizes, TEGRA_VGPU_QUEUE_CMD,
 				ARRAY_SIZE(queue_sizes));
 }
 
-static inline void vgpu_comm_deinit(void)
+void vgpu_comm_deinit(void)
 {
 	size_t queue_sizes[] = { TEGRA_VGPU_QUEUE_SIZES };
 
-	tegra_gr_comm_deinit(TEGRA_GR_COMM_CTX_CLIENT, TEGRA_VGPU_QUEUE_CMD,
-			ARRAY_SIZE(queue_sizes));
+	vgpu_ivc_deinit(TEGRA_VGPU_QUEUE_CMD, ARRAY_SIZE(queue_sizes));
 }
 
 int vgpu_comm_sendrecv(struct tegra_vgpu_cmd_msg *msg, size_t size_in,
@@ -47,19 +54,18 @@ int vgpu_comm_sendrecv(struct tegra_vgpu_cmd_msg *msg, size_t size_in,
 	void *data = msg;
 	int err;
 
-	err = tegra_gr_comm_sendrecv(TEGRA_GR_COMM_CTX_CLIENT,
-				tegra_gr_comm_get_server_vmid(),
+	err = vgpu_ivc_sendrecv(vgpu_ivc_get_server_vmid(),
 				TEGRA_VGPU_QUEUE_CMD, &handle, &data, &size);
 	if (!err) {
 		WARN_ON(size < size_out);
 		memcpy(msg, data, size_out);
-		tegra_gr_comm_release(handle);
+		vgpu_ivc_release(handle);
 	}
 
 	return err;
 }
 
-static u64 vgpu_connect(void)
+u64 vgpu_connect(void)
 {
 	struct tegra_vgpu_cmd_msg msg;
 	struct tegra_vgpu_connect_params *p = &msg.params.connect;
@@ -90,9 +96,59 @@ int vgpu_get_attribute(u64 handle, u32 attrib, u32 *value)
 	return 0;
 }
 
-static int vgpu_intr_thread(void *dev_id)
+static void vgpu_handle_channel_event(struct gk20a *g,
+			struct tegra_vgpu_channel_event_info *info)
+{
+	struct tsg_gk20a *tsg;
+
+	if (!info->is_tsg) {
+		nvgpu_err(g, "channel event posted");
+		return;
+	}
+
+	if (info->id >= g->fifo.num_channels ||
+		info->event_id >= TEGRA_VGPU_CHANNEL_EVENT_ID_MAX) {
+		nvgpu_err(g, "invalid channel event");
+		return;
+	}
+
+	tsg = &g->fifo.tsg[info->id];
+
+	gk20a_tsg_event_id_post_event(tsg, info->event_id);
+}
+
+static void vgpu_channel_abort_cleanup(struct gk20a *g, u32 chid)
+{
+	struct channel_gk20a *ch = gk20a_channel_from_id(g, chid);
+
+	if (ch == NULL) {
+		nvgpu_err(g, "invalid channel id %d", chid);
+		return;
+	}
+
+	gk20a_channel_set_timedout(ch);
+	g->ops.fifo.ch_abort_clean_up(ch);
+	gk20a_channel_put(ch);
+}
+
+static void vgpu_set_error_notifier(struct gk20a *g,
+		struct tegra_vgpu_channel_set_error_notifier *p)
+{
+	struct channel_gk20a *ch;
+
+	if (p->chid >= g->fifo.num_channels) {
+		nvgpu_err(g, "invalid chid %d", p->chid);
+		return;
+	}
+
+	ch = &g->fifo.channel[p->chid];
+	g->ops.fifo.set_error_notifier(ch, p->error);
+}
+
+int vgpu_intr_thread(void *dev_id)
 {
 	struct gk20a *g = dev_id;
+	struct vgpu_priv_data *priv = vgpu_get_priv_data(g);
 
 	while (true) {
 		struct tegra_vgpu_intr_msg *msg;
@@ -101,46 +157,76 @@ static int vgpu_intr_thread(void *dev_id)
 		size_t size;
 		int err;
 
-		err = tegra_gr_comm_recv(TEGRA_GR_COMM_CTX_CLIENT,
-					TEGRA_VGPU_QUEUE_INTR, &handle,
+		err = vgpu_ivc_recv(TEGRA_VGPU_QUEUE_INTR, &handle,
 					(void **)&msg, &size, &sender);
+		if (err == -ETIME)
+			continue;
 		if (WARN_ON(err))
 			continue;
 
 		if (msg->event == TEGRA_VGPU_EVENT_ABORT) {
-			tegra_gr_comm_release(handle);
+			vgpu_ivc_release(handle);
 			break;
 		}
 
-		if (msg->unit == TEGRA_VGPU_INTR_GR)
-			vgpu_gr_isr(g, &msg->info.gr_intr);
-		else if (msg->unit == TEGRA_VGPU_NONSTALL_INTR_GR)
-			vgpu_gr_nonstall_isr(g, &msg->info.gr_nonstall_intr);
-		else if (msg->unit == TEGRA_VGPU_INTR_FIFO)
-			vgpu_fifo_isr(g, &msg->info.fifo_intr);
-		else if (msg->unit == TEGRA_VGPU_NONSTALL_INTR_FIFO)
-			vgpu_fifo_nonstall_isr(g,
-					&msg->info.fifo_nonstall_intr);
-		else if (msg->unit == TEGRA_VGPU_NONSTALL_INTR_CE2)
-			vgpu_ce2_nonstall_isr(g, &msg->info.ce2_nonstall_intr);
+		switch (msg->event) {
+		case TEGRA_VGPU_EVENT_INTR:
+			if (msg->unit == TEGRA_VGPU_INTR_GR)
+				vgpu_gr_isr(g, &msg->info.gr_intr);
+			else if (msg->unit == TEGRA_VGPU_INTR_FIFO)
+				vgpu_fifo_isr(g, &msg->info.fifo_intr);
+			break;
+#ifdef CONFIG_GK20A_CTXSW_TRACE
+		case TEGRA_VGPU_EVENT_FECS_TRACE:
+			vgpu_fecs_trace_data_update(g);
+			break;
+#endif
+		case TEGRA_VGPU_EVENT_CHANNEL:
+			vgpu_handle_channel_event(g, &msg->info.channel_event);
+			break;
+		case TEGRA_VGPU_EVENT_SM_ESR:
+			vgpu_gr_handle_sm_esr_event(g, &msg->info.sm_esr);
+			break;
+		case TEGRA_VGPU_EVENT_SEMAPHORE_WAKEUP:
+			g->ops.semaphore_wakeup(g,
+					!!msg->info.sem_wakeup.post_events);
+			break;
+		case TEGRA_VGPU_EVENT_CHANNEL_CLEANUP:
+			vgpu_channel_abort_cleanup(g,
+					msg->info.ch_cleanup.chid);
+			break;
+		case TEGRA_VGPU_EVENT_SET_ERROR_NOTIFIER:
+			vgpu_set_error_notifier(g,
+						&msg->info.set_error_notifier);
+			break;
+		default:
+			nvgpu_err(g, "unknown event %u", msg->event);
+			break;
+		}
 
-		tegra_gr_comm_release(handle);
+		vgpu_ivc_release(handle);
 	}
 
-	while (!kthread_should_stop())
-		msleep(10);
+	while (!nvgpu_thread_should_stop(&priv->intr_handler))
+		nvgpu_msleep(10);
 	return 0;
 }
 
-static void vgpu_remove_support(struct platform_device *dev)
+void vgpu_remove_support_common(struct gk20a *g)
 {
-	struct gk20a *g = get_gk20a(dev);
-	struct gk20a_platform *platform = gk20a_get_platform(dev);
+	struct vgpu_priv_data *priv = vgpu_get_priv_data(g);
 	struct tegra_vgpu_intr_msg msg;
 	int err;
 
+	if (g->dbg_regops_tmp_buf)
+		nvgpu_kfree(g, g->dbg_regops_tmp_buf);
+
 	if (g->pmu.remove_support)
 		g->pmu.remove_support(&g->pmu);
+
+	if (g->acr.remove_support != NULL) {
+		g->acr.remove_support(&g->acr);
+	}
 
 	if (g->gr.remove_support)
 		g->gr.remove_support(&g->gr);
@@ -152,316 +238,160 @@ static void vgpu_remove_support(struct platform_device *dev)
 		g->mm.remove_support(&g->mm);
 
 	msg.event = TEGRA_VGPU_EVENT_ABORT;
-	err = tegra_gr_comm_send(TEGRA_GR_COMM_CTX_CLIENT,
-				TEGRA_GR_COMM_ID_SELF, TEGRA_VGPU_QUEUE_INTR,
+	err = vgpu_ivc_send(vgpu_ivc_get_peer_self(), TEGRA_VGPU_QUEUE_INTR,
 				&msg, sizeof(msg));
-	WARN_ON(err);
-	kthread_stop(platform->intr_handler);
+	if (err)
+		nvgpu_log_info(g, "vgpu_ivc_send_returned %d\n", err);
 
-	/* free mappings to registers, etc*/
+	nvgpu_thread_stop(&priv->intr_handler);
 
-	if (g->bar1) {
-		iounmap(g->bar1);
-		g->bar1 = 0;
-	}
+	nvgpu_clk_arb_cleanup_arbiter(g);
+
+	nvgpu_mutex_destroy(&g->clk_arb_enable_lock);
+	nvgpu_mutex_destroy(&priv->vgpu_clk_get_freq_lock);
+
+	nvgpu_kfree(g, priv->freqs);
 }
 
-static int vgpu_init_support(struct platform_device *dev)
+void vgpu_detect_chip(struct gk20a *g)
 {
-	struct resource *r = platform_get_resource(dev, IORESOURCE_MEM, 0);
-	struct gk20a *g = get_gk20a(dev);
-	int err = 0;
+	struct nvgpu_gpu_params *p = &g->params;
+	struct vgpu_priv_data *priv = vgpu_get_priv_data(g);
 
-	if (!r) {
-		dev_err(dev_from_gk20a(g), "faield to get gk20a bar1\n");
-		err = -ENXIO;
-		goto fail;
-	}
+	p->gpu_arch = priv->constants.arch;
+	p->gpu_impl = priv->constants.impl;
+	p->gpu_rev = priv->constants.rev;
 
-	g->bar1 = devm_request_and_ioremap(&dev->dev, r);
-	if (!g->bar1) {
-		dev_err(dev_from_gk20a(g), "failed to remap gk20a bar1\n");
-		err = -ENXIO;
-		goto fail;
-	}
-
-	mutex_init(&g->dbg_sessions_lock);
-	mutex_init(&g->client_lock);
-
-	g->remove_support = vgpu_remove_support;
-	return 0;
-
- fail:
-	vgpu_remove_support(dev);
-	return err;
+	nvgpu_log_info(g, "arch: %x, impl: %x, rev: %x\n",
+			p->gpu_arch,
+			p->gpu_impl,
+			p->gpu_rev);
 }
 
-int vgpu_pm_prepare_poweroff(struct device *dev)
+int vgpu_init_gpu_characteristics(struct gk20a *g)
 {
-	struct platform_device *pdev = to_platform_device(dev);
-	struct gk20a *g = get_gk20a(pdev);
-	int ret = 0;
-
-	gk20a_dbg_fn("");
-
-	if (!g->power_on)
-		return 0;
-
-	ret = gk20a_channel_suspend(g);
-	if (ret)
-		return ret;
-
-	g->power_on = false;
-
-	return ret;
-}
-
-static void vgpu_detect_chip(struct gk20a *g)
-{
-	struct nvgpu_gpu_characteristics *gpu = &g->gpu_characteristics;
-	struct gk20a_platform *platform = gk20a_get_platform(g->dev);
-
-	u32 mc_boot_0_value;
-
-	if (vgpu_get_attribute(platform->virt_handle,
-			TEGRA_VGPU_ATTRIB_PMC_BOOT_0,
-			&mc_boot_0_value)) {
-		gk20a_err(dev_from_gk20a(g), "failed to detect chip");
-		return;
-	}
-
-	gpu->arch = mc_boot_0_architecture_v(mc_boot_0_value) <<
-		NVGPU_GPU_ARCHITECTURE_SHIFT;
-	gpu->impl = mc_boot_0_implementation_v(mc_boot_0_value);
-	gpu->rev =
-		(mc_boot_0_major_revision_v(mc_boot_0_value) << 4) |
-		mc_boot_0_minor_revision_v(mc_boot_0_value);
-
-	gk20a_dbg_info("arch: %x, impl: %x, rev: %x\n",
-			g->gpu_characteristics.arch,
-			g->gpu_characteristics.impl,
-			g->gpu_characteristics.rev);
-}
-
-static int vgpu_init_hal(struct gk20a *g)
-{
-	u32 ver = g->gpu_characteristics.arch + g->gpu_characteristics.impl;
-
-	switch (ver) {
-	case GK20A_GPUID_GK20A:
-		gk20a_dbg_info("gk20a detected");
-		/* init gk20a ops then override with virt extensions */
-		gk20a_init_hal(g);
-		vgpu_init_fifo_ops(&g->ops);
-		vgpu_init_gr_ops(&g->ops);
-		vgpu_init_ltc_ops(&g->ops);
-		vgpu_init_mm_ops(&g->ops);
-		vgpu_init_debug_ops(&g->ops);
-		break;
-	default:
-		gk20a_err(&g->dev->dev, "no support for %x", ver);
-		return -ENODEV;
-	}
-
-	return 0;
-}
-
-int vgpu_pm_finalize_poweron(struct device *dev)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct gk20a *g = get_gk20a(pdev);
 	int err;
 
-	gk20a_dbg_fn("");
-
-	if (g->power_on)
-		return 0;
-
-	g->power_on = true;
-
-	vgpu_detect_chip(g);
-	err = vgpu_init_hal(g);
-	if (err)
-		goto done;
-
-	err = vgpu_init_mm_support(g);
-	if (err) {
-		gk20a_err(dev, "failed to init gk20a mm");
-		goto done;
-	}
-
-	err = vgpu_init_fifo_support(g);
-	if (err) {
-		gk20a_err(dev, "failed to init gk20a fifo");
-		goto done;
-	}
-
-	err = vgpu_init_gr_support(g);
-	if (err) {
-		gk20a_err(dev, "failed to init gk20a gr");
-		goto done;
-	}
+	nvgpu_log_fn(g, " ");
 
 	err = gk20a_init_gpu_characteristics(g);
-	if (err) {
-		gk20a_err(dev, "failed to init gk20a gpu characteristics");
-		goto done;
-	}
-
-	gk20a_channel_resume(g);
-
-done:
-	return err;
-}
-
-static int vgpu_pm_initialise_domain(struct platform_device *pdev)
-{
-	struct gk20a_platform *platform = platform_get_drvdata(pdev);
-	struct dev_power_governor *pm_domain_gov = NULL;
-	struct gk20a_domain_data *vgpu_pd_data;
-	struct generic_pm_domain *domain;
-
-	vgpu_pd_data = (struct gk20a_domain_data *)kzalloc
-		(sizeof(struct gk20a_domain_data), GFP_KERNEL);
-
-	if (!vgpu_pd_data)
-		return -ENOMEM;
-
-	domain = &vgpu_pd_data->gpd;
-	vgpu_pd_data->gk20a = platform->g;
-
-	domain->name = "gpu";
-
-#ifdef CONFIG_PM_RUNTIME
-	pm_domain_gov = &pm_domain_always_on_gov;
-#endif
-
-	pm_genpd_init(domain, pm_domain_gov, true);
-
-	domain->dev_ops.save_state = vgpu_pm_prepare_poweroff;
-	domain->dev_ops.restore_state = vgpu_pm_finalize_poweron;
-
-	device_set_wakeup_capable(&pdev->dev, 0);
-	return pm_genpd_add_device(domain, &pdev->dev);
-}
-
-static int vgpu_pm_init(struct platform_device *dev)
-{
-	int err = 0;
-
-	gk20a_dbg_fn("");
-
-	pm_runtime_enable(&dev->dev);
-
-	/* genpd will take care of runtime power management if it is enabled */
-	if (IS_ENABLED(CONFIG_PM_GENERIC_DOMAINS))
-		err = vgpu_pm_initialise_domain(dev);
-
-	return err;
-}
-
-int vgpu_probe(struct platform_device *dev)
-{
-	struct gk20a *gk20a;
-	int err;
-	struct gk20a_platform *platform = gk20a_get_platform(dev);
-
-	if (!platform) {
-		dev_err(&dev->dev, "no platform data\n");
-		return -ENODATA;
-	}
-
-	gk20a_dbg_fn("");
-
-	gk20a = kzalloc(sizeof(struct gk20a), GFP_KERNEL);
-	if (!gk20a) {
-		dev_err(&dev->dev, "couldn't allocate gk20a support");
-		return -ENOMEM;
-	}
-
-	platform->g = gk20a;
-	gk20a->dev = dev;
-
-	err = gk20a_user_init(dev);
 	if (err)
 		return err;
 
-	vgpu_init_support(dev);
+	__nvgpu_set_enabled(g, NVGPU_SUPPORT_MAP_BUFFER_BATCH, false);
 
-	init_rwsem(&gk20a->busy_lock);
-
-	spin_lock_init(&gk20a->mc_enable_lock);
-
-	/* Initialize the platform interface. */
-	err = platform->probe(dev);
-	if (err) {
-		dev_err(&dev->dev, "platform probe failed");
-		return err;
-	}
-
-	err = vgpu_pm_init(dev);
-	if (err) {
-		dev_err(&dev->dev, "pm init failed");
-		return err;
-	}
-
-	if (platform->late_probe) {
-		err = platform->late_probe(dev);
-		if (err) {
-			dev_err(&dev->dev, "late probe failed");
-			return err;
-		}
-	}
-
-	err = vgpu_comm_init(dev);
-	if (err) {
-		dev_err(&dev->dev, "failed to init comm interface\n");
-		return -ENOSYS;
-	}
-
-	platform->virt_handle = vgpu_connect();
-	if (!platform->virt_handle) {
-		dev_err(&dev->dev, "failed to connect to server node\n");
-		vgpu_comm_deinit();
-		return -ENOSYS;
-	}
-
-	platform->intr_handler = kthread_run(vgpu_intr_thread, gk20a, "gk20a");
-	if (IS_ERR(platform->intr_handler))
-		return -ENOMEM;
-
-	gk20a_debug_init(dev);
-
-	/* Set DMA parameters to allow larger sgt lists */
-	dev->dev.dma_parms = &gk20a->dma_parms;
-	dma_set_max_seg_size(&dev->dev, UINT_MAX);
-
-	gk20a->gr_idle_timeout_default =
-			CONFIG_GK20A_DEFAULT_TIMEOUT;
-	gk20a->timeouts_enabled = true;
-
-	gk20a_create_sysfs(dev);
-	gk20a_init_gr(gk20a);
+	/* features vgpu does not support */
+	__nvgpu_set_enabled(g, NVGPU_SUPPORT_RESCHEDULE_RUNLIST, false);
 
 	return 0;
 }
 
-int vgpu_remove(struct platform_device *dev)
+int vgpu_read_ptimer(struct gk20a *g, u64 *value)
 {
-	struct gk20a *g = get_gk20a(dev);
-	struct gk20a_domain_data *vgpu_gpd;
-	gk20a_dbg_fn("");
+	struct tegra_vgpu_cmd_msg msg = {0};
+	struct tegra_vgpu_read_ptimer_params *p = &msg.params.read_ptimer;
+	int err;
 
-	if (g->remove_support)
-		g->remove_support(dev);
+	nvgpu_log_fn(g, " ");
 
-	vgpu_gpd = container_of(&g, struct gk20a_domain_data, gk20a);
-	vgpu_gpd->gk20a = NULL;
-	kfree(vgpu_gpd);
+	msg.cmd = TEGRA_VGPU_CMD_READ_PTIMER;
+	msg.handle = vgpu_get_handle(g);
 
-	vgpu_comm_deinit();
-	gk20a_user_deinit(dev);
-	gk20a_get_platform(dev)->g = NULL;
-	kfree(g);
+	err = vgpu_comm_sendrecv(&msg, sizeof(msg), sizeof(msg));
+	err = err ? err : msg.ret;
+	if (!err)
+		*value = p->time;
+	else
+		nvgpu_err(g, "vgpu read ptimer failed, err=%d", err);
+
+	return err;
+}
+
+int vgpu_get_timestamps_zipper(struct gk20a *g,
+		u32 source_id, u32 count,
+		struct nvgpu_cpu_time_correlation_sample *samples)
+{
+	struct tegra_vgpu_cmd_msg msg = {0};
+	struct tegra_vgpu_get_timestamps_zipper_params *p =
+			&msg.params.get_timestamps_zipper;
+	int err;
+	u32 i;
+
+	nvgpu_log_fn(g, " ");
+
+	if (count > TEGRA_VGPU_GET_TIMESTAMPS_ZIPPER_MAX_COUNT) {
+		nvgpu_err(g, "count %u overflow", count);
+		return -EINVAL;
+	}
+
+	msg.cmd = TEGRA_VGPU_CMD_GET_TIMESTAMPS_ZIPPER;
+	msg.handle = vgpu_get_handle(g);
+	p->source_id = TEGRA_VGPU_GET_TIMESTAMPS_ZIPPER_SRC_ID_TSC;
+	p->count = count;
+
+	err = vgpu_comm_sendrecv(&msg, sizeof(msg), sizeof(msg));
+	err = err ? err : msg.ret;
+	if (err) {
+		nvgpu_err(g, "vgpu get timestamps zipper failed, err=%d", err);
+		return err;
+	}
+
+	for (i = 0; i < count; i++) {
+		samples[i].cpu_timestamp = p->samples[i].cpu_timestamp;
+		samples[i].gpu_timestamp = p->samples[i].gpu_timestamp;
+	}
+
+	return err;
+}
+
+int vgpu_init_hal(struct gk20a *g)
+{
+	u32 ver = g->params.gpu_arch + g->params.gpu_impl;
+	int err;
+
+	switch (ver) {
+	case NVGPU_GPUID_GP10B:
+		nvgpu_log_info(g, "gp10b detected");
+		err = vgpu_gp10b_init_hal(g);
+		break;
+	case NVGPU_GPUID_GV11B:
+		err = vgpu_gv11b_init_hal(g);
+		break;
+	default:
+		nvgpu_err(g, "no support for %x", ver);
+		err = -ENODEV;
+		break;
+	}
+
+	return err;
+}
+
+int vgpu_get_constants(struct gk20a *g)
+{
+	struct tegra_vgpu_cmd_msg msg = {};
+	struct tegra_vgpu_constants_params *p = &msg.params.constants;
+	struct vgpu_priv_data *priv = vgpu_get_priv_data(g);
+	int err;
+
+	nvgpu_log_fn(g, " ");
+
+	msg.cmd = TEGRA_VGPU_CMD_GET_CONSTANTS;
+	msg.handle = vgpu_get_handle(g);
+	err = vgpu_comm_sendrecv(&msg, sizeof(msg), sizeof(msg));
+	err = err ? err : msg.ret;
+
+	if (unlikely(err)) {
+		nvgpu_err(g, "%s failed, err=%d", __func__, err);
+		return err;
+	}
+
+	if (unlikely(p->gpc_count > TEGRA_VGPU_MAX_GPC_COUNT ||
+		p->max_tpc_per_gpc_count > TEGRA_VGPU_MAX_TPC_COUNT_PER_GPC)) {
+		nvgpu_err(g, "gpc_count %d max_tpc_per_gpc %d overflow",
+			(int)p->gpc_count, (int)p->max_tpc_per_gpc_count);
+		return -EINVAL;
+	}
+
+	priv->constants = *p;
 	return 0;
 }

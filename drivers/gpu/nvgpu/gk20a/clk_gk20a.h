@@ -1,27 +1,40 @@
 /*
- * Copyright (c) 2011 - 2014, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2011 - 2019, NVIDIA CORPORATION.  All rights reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 #ifndef CLK_GK20A_H
 #define CLK_GK20A_H
 
-#include <linux/mutex.h>
+#include <nvgpu/lock.h>
+
+#if defined(CONFIG_COMMON_CLK)
+#include <linux/clk-provider.h>
+#endif
 
 #define GPUFREQ_TABLE_END     ~(u32)1
 enum {
 	/* only one PLL for gk20a */
 	GK20A_GPC_PLL = 0,
+	/* 2 PLL revisions for gm20b */
+	GM20B_GPC_PLL_B1,
+	GM20B_GPC_PLL_C1,
 };
 
 enum gpc_pll_mode {
@@ -72,31 +85,37 @@ struct pll_parms {
 	u32 lock_timeout;
 	u32 na_lock_delay;
 	u32 iddq_exit_delay;
+	/* NA mode DFS control */
+	u32 dfs_ctrl;
 };
+
+struct namemap_cfg;
 
 struct clk_gk20a {
 	struct gk20a *g;
+#if defined(CONFIG_COMMON_CLK)
 	struct clk *tegra_clk;
+	struct clk *tegra_clk_parent;
+	struct clk_hw hw;
+#endif
 	struct pll gpc_pll;
 	struct pll gpc_pll_last;
-	struct mutex clk_mutex;
+	struct nvgpu_mutex clk_mutex;
+	struct namemap_cfg *clk_namemap;
+	u32 namemap_num;
+	u32 *namemap_xlat_table;
 	bool sw_ready;
 	bool clk_hw_on;
 	bool debugfs_set;
+	int pll_poweron_uv;
+	unsigned long dvfs_safe_max_freq;
 };
 
-struct gpu_ops;
-#ifdef CONFIG_TEGRA_CLK_FRAMEWORK
-void gk20a_init_clk_ops(struct gpu_ops *gops);
-#else
-static inline void gk20a_init_clk_ops(struct gpu_ops *gops) {}
+#if defined(CONFIG_COMMON_CLK)
+#define to_clk_gk20a(_hw) container_of(_hw, struct clk_gk20a, hw)
 #endif
 
-/* APIs used for both GK20A and GM20B */
-unsigned long gk20a_clk_get_rate(struct gk20a *g);
-int gk20a_clk_set_rate(struct gk20a *g, unsigned long rate);
-long gk20a_clk_round_rate(struct gk20a *g, unsigned long rate);
-struct clk *gk20a_clk_get(struct gk20a *g);
+struct gpu_ops;
 
 #define KHZ 1000
 #define MHZ 1000000
