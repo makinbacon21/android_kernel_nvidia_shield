@@ -998,7 +998,7 @@ struct nvgpu_gpu_set_event_filter_args {
 	/* in: Address of buffer containing bit mask of events.
 	 * Bit #n is set if event #n should be monitored.
 	 */
-	__u64 buffer;
+	__u32 buffer;
 };
 
 #define NVGPU_EVENT_IOCTL_SET_FILTER \

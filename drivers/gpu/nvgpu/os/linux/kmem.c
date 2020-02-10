@@ -78,7 +78,7 @@ void *__nvgpu_kmalloc(struct gk20a *g, size_t size, void *ip)
 	alloc = kmalloc(size, GFP_KERNEL);
 #endif
 
-	kmem_dbg(g, "kmalloc: size=%-6ld addr=0x%p gfp=0x%08x",
+	kmem_dbg(g, "kmalloc: size=%-6zd addr=0x%p gfp=0x%08x",
 		 size, alloc, GFP_KERNEL);
 
 	return alloc;
@@ -94,7 +94,7 @@ void *__nvgpu_kzalloc(struct gk20a *g, size_t size, void *ip)
 	alloc = kzalloc(size, GFP_KERNEL);
 #endif
 
-	kmem_dbg(g, "kzalloc: size=%-6ld addr=0x%p gfp=0x%08x",
+	kmem_dbg(g, "kzalloc: size=%-6zd addr=0x%p gfp=0x%08x",
 		 size, alloc, GFP_KERNEL);
 
 	return alloc;
@@ -110,7 +110,7 @@ void *__nvgpu_kcalloc(struct gk20a *g, size_t n, size_t size, void *ip)
 	alloc = kcalloc(n, size, GFP_KERNEL);
 #endif
 
-	kmem_dbg(g, "kcalloc: size=%-6ld addr=0x%p gfp=0x%08x",
+	kmem_dbg(g, "kcalloc: size=%-6zd addr=0x%p gfp=0x%08x",
 		 n * size, alloc, GFP_KERNEL);
 
 	return alloc;

@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <linux/slab.h>
+#include <linux/stat.h>
 #include <linux/pci.h>
 #include <linux/interrupt.h>
 #include <linux/pm_runtime.h>

@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <linux/stat.h>
+
 #include <nvgpu/ecc.h>
 #include <nvgpu/gk20a.h>
 
@@ -42,7 +44,7 @@ int nvgpu_ecc_sysfs_init(struct gk20a *g)
 		}
 		sysfs_attr_init(&attr[i].attr.attr);
 		attr[i].attr.attr.name = stat->name;
-		attr[i].attr.attr.mode = VERIFY_OCTAL_PERMISSIONS(S_IRUGO);
+		attr[i].attr.attr.mode = S_IRUGO;
 		attr[i].var =  &stat->counter;
 		attr[i].attr.show = device_show_int;
 		err = device_create_file(dev, &attr[i].attr);

@@ -85,7 +85,7 @@ static int __nvgpu_timeout_expired_msg_cpu(struct nvgpu_timeout *timeout,
 	if (nvgpu_timeout_is_pre_silicon(timeout))
 		return 0;
 
-	if (ktime_after(now, ns_to_ktime(timeout->time))) {
+	if (ktime_compare(now, ns_to_ktime(timeout->time)) > 0) {
 		if (!(timeout->flags & NVGPU_TIMER_SILENT_TIMEOUT)) {
 			char buf[128];
 
@@ -175,7 +175,7 @@ int nvgpu_timeout_peek_expired(struct nvgpu_timeout *timeout)
 	if (timeout->flags & NVGPU_TIMER_RETRY_TIMER)
 		return timeout->retries.attempted >= timeout->retries.max;
 	else
-		return ktime_after(ktime_get(), ns_to_ktime(timeout->time));
+		return ktime_compare(ktime_get(), ns_to_ktime(timeout->time)) > 0;
 }
 
 /**

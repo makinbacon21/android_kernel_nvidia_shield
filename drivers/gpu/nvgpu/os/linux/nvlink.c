@@ -18,6 +18,8 @@
 #include <linux/platform/tegra/tegra-nvlink.h>
 #endif
 
+#include <asm/io.h>
+
 #include <nvgpu/gk20a.h>
 #include <nvgpu/nvlink.h>
 #include <nvgpu/enabled.h>

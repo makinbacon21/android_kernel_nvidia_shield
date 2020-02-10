@@ -18,5 +18,5 @@
 
 bool nvgpu_is_vpr_resize_enabled(void)
 {
-	return tegra_is_vpr_resize_supported();
+	return false;
 }

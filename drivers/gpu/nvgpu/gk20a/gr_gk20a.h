@@ -321,9 +321,9 @@ struct gr_gk20a {
 		bool valid;
 
 		u32 preempt_image_size;
-		bool force_preemption_gfxp;
-		bool force_preemption_cilp;
-		bool dump_ctxsw_stats_on_channel_close;
+		u32 force_preemption_gfxp;
+		u32 force_preemption_cilp;
+		u32 dump_ctxsw_stats_on_channel_close;
 	} ctx_vars;
 
 	struct nvgpu_mutex ctx_mutex; /* protect golden ctx init */

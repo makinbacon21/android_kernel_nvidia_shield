@@ -55,7 +55,7 @@
 #include "os_linux.h"
 
 #include "../../../arch/arm/mach-tegra/iomap.h"
-#include <soc/tegra/pmc.h>
+#include <linux/tegra-pmc.h>
 
 #define TEGRA_GK20A_BW_PER_FREQ 32
 #define TEGRA_GM20B_BW_PER_FREQ 64

@@ -525,8 +525,7 @@ static ssize_t mscg_enable_store(struct device *dev,
 			if (g->ops.pmu.pmu_is_lpwr_feature_supported(g,
 					PMU_PG_LPWR_FEATURE_MSCG)) {
 				if (!ACCESS_ONCE(pmu->mscg_stat)) {
-					WRITE_ONCE(pmu->mscg_stat,
-						PMU_MSCG_ENABLED);
+					pmu->mscg_stat = PMU_MSCG_ENABLED;
 					/* make status visible */
 					smp_mb();
 				}
@@ -536,7 +535,7 @@ static ssize_t mscg_enable_store(struct device *dev,
 			if (g->ops.pmu.pmu_is_lpwr_feature_supported(g,
 					PMU_PG_LPWR_FEATURE_MSCG)) {
 				nvgpu_pmu_pg_global_enable(g, false);
-				WRITE_ONCE(pmu->mscg_stat, PMU_MSCG_DISABLED);
+				pmu->mscg_stat = PMU_MSCG_DISABLED;
 				/* make status visible */
 				smp_mb();
 				g->mscg_enabled = false;

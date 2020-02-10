@@ -1,10 +1,7 @@
 GCOV_PROFILE := y
 
-ccflags-y += -I$(srctree.nvgpu)/drivers/gpu/nvgpu/include
-ccflags-y += -I$(srctree.nvgpu)/drivers/gpu/nvgpu
-ccflags-y += -I$(srctree.nvgpu)/include
-ccflags-y += -I$(srctree.nvgpu)/include/uapi
-ccflags-y += -I$(srctree.nvgpu-next)/drivers/gpu/nvgpu
+ccflags-y += -I$(srctree)/drivers/gpu/nvgpu/include
+ccflags-y += -I$(srctree)/drivers/gpu/nvgpu
 
 ccflags-y += -I$(srctree)/drivers/devfreq
 

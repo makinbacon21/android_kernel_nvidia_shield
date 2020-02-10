@@ -18,6 +18,7 @@
 #include <linux/ktime.h>
 #include <linux/uaccess.h>
 #include <linux/poll.h>
+#include <linux/vmalloc.h>
 #include <trace/events/gk20a.h>
 #include <uapi/linux/nvgpu.h>
 #include <nvgpu/ctxsw_trace.h>

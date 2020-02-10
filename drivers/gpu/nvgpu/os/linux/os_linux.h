@@ -18,6 +18,7 @@
 #define NVGPU_OS_LINUX_H
 
 #include <linux/cdev.h>
+#include <linux/device.h>
 #include <linux/iommu.h>
 #include <linux/hashtable.h>
 

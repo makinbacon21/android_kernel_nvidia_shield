@@ -20,6 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <linux/err.h>
+
 #include <nvgpu/bitops.h>
 #include <nvgpu/allocator.h>
 #include <nvgpu/page_allocator.h>

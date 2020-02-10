@@ -23,6 +23,8 @@
 #ifndef NVGPU_MM_H
 #define NVGPU_MM_H
 
+#include <linux/err.h>
+
 #include <nvgpu/types.h>
 #include <nvgpu/cond.h>
 #include <nvgpu/thread.h>
@@ -145,7 +147,7 @@ struct mm_gk20a {
 	int physical_bits;
 	bool use_full_comp_tag_line;
 	bool ltc_enabled_current;
-	bool ltc_enabled_target;
+	u32 ltc_enabled_target;
 	bool disable_bigpage;
 
 	struct nvgpu_mem sysmem_flush;

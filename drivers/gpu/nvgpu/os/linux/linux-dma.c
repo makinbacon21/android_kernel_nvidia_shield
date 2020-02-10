@@ -15,6 +15,7 @@
  */
 
 #include <linux/dma-mapping.h>
+#include <linux/vmalloc.h>
 #include <linux/version.h>
 
 #include <nvgpu/log.h>

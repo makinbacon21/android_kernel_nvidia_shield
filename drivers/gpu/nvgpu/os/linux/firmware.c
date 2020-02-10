@@ -44,9 +44,11 @@ static const struct firmware *do_request_firmware(struct device *dev,
 		fw_name = fw_path;
 	}
 
+#if 0
 	if (flags & NVGPU_REQUEST_FIRMWARE_NO_WARN)
 		err = request_firmware_direct(&fw, fw_name, dev);
 	else
+#endif
 		err = request_firmware(&fw, fw_name, dev);
 
 	nvgpu_kfree(get_gk20a(dev), fw_path);

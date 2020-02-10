@@ -20,6 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <linux/err.h>
+
 #include <nvgpu/atomic.h>
 #include <nvgpu/allocator.h>
 #include <nvgpu/kmem.h>
