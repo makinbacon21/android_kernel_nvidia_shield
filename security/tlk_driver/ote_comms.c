@@ -134,6 +134,29 @@ static void do_smc(struct te_request *request, struct tlk_device *dev)
 	}
 }
 
+/*
+ * VPR programming SMC
+ */
+int tlk_set_vpr_params(void *vpr_base, size_t vpr_size)
+{
+	uint32_t retval;
+
+	/* Share the same lock used when request is send from user side */
+	mutex_lock(&smc_lock);
+
+	retval = tlk_send_smc(TE_SMC_PROGRAM_VPR, (uintptr_t)vpr_base, vpr_size);
+
+	mutex_unlock(&smc_lock);
+
+	if (retval != OTE_SUCCESS) {
+		pr_err("%s: smc failed err (0x%x)\n", __func__, retval);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(tlk_set_vpr_params);
+
 void tlk_restore_keyslots(void)
 {
 	uint32_t retval;

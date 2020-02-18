@@ -263,7 +263,7 @@ retry:
 	err = gk20a_do_idle();
 	if (!err) {
 		/* Config VPR_BOM/_SIZE in MC */
-		err = te_set_vpr_params((void *)(uintptr_t)base, size);
+		err = tlk_set_vpr_params((void *)(uintptr_t)base, size);
 		gk20a_do_unidle();
 	} else {
 		if (retries--) {

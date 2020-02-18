@@ -2802,7 +2802,7 @@ static int tegra_nvavp_resume(struct device *dev)
 
 #ifdef CONFIG_TRUSTED_LITTLE_KERNEL
 	nvavp_clks_enable(nvavp);
-	te_restore_keyslots();
+	tlk_restore_keyslots();
 	nvavp_clks_disable(nvavp);
 #endif
 

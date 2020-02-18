@@ -97,10 +97,10 @@
 #define CMD_VRR_AUTH			102
 
 #if defined(CONFIG_TRUSTED_LITTLE_KERNEL)
-extern int te_open_trusted_session(u32 *ta_uuid, u32 size, u32 *session_id);
-extern int te_launch_trusted_oper(u64 *buf, u32 buflen, u32 session_id,
+extern int te_open_trusted_session_tlk(u32 *ta_uuid, u32 size, u32 *session_id);
+extern int te_launch_trusted_oper_tlk(u64 *buf, u32 buflen, u32 session_id,
 		u32 *ta_uuid, u32 comd_id, u32 size);
-extern void te_close_trusted_session(u32 session_id, u32 *ta_uuid, u32 size);
+extern void te_close_trusted_session_tlk(u32 session_id, u32 *ta_uuid, u32 size);
 #endif
 
 #ifdef CONFIG_TEGRA_HDMIVRR

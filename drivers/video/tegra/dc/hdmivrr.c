@@ -389,7 +389,7 @@ void hdmivrr_te_service_commands(u32 ta_cmd, u32 session_id)
 	u32 vrr_auth_uuid[4] = VRR_AUTH_UUID;
 	u32 uuid_size = sizeof(vrr_auth_uuid);
 
-	status = te_launch_trusted_oper((u64 *)vrr_buf, PAGE_SIZE, session_id,
+	status = te_launch_trusted_oper_tlk((u64 *)vrr_buf, PAGE_SIZE, session_id,
 					vrr_auth_uuid, ta_cmd, uuid_size);
 	if (status)
 		pr_err("VRR: Failed to launch operation, err = %d\n", status);
@@ -403,7 +403,7 @@ int hdmivrr_te_init(u32 *session_id)
 	u32 vrr_auth_uuid[4] = VRR_AUTH_UUID;
 	u32 uuid_size = sizeof(vrr_auth_uuid);
 
-	status = te_open_trusted_session(vrr_auth_uuid, uuid_size, session_id);
+	status = te_open_trusted_session_tlk(vrr_auth_uuid, uuid_size, session_id);
 
 	if (status)
 		pr_err("VRR: Failed to open session, err = %d\n", status);
@@ -417,7 +417,7 @@ void hdmivrr_te_deinit(s32 session_id)
 	u32 vrr_auth_uuid[4] = VRR_AUTH_UUID;
 	u32 uuid_size = sizeof(vrr_auth_uuid);
 
-	te_close_trusted_session(session_id, vrr_auth_uuid, uuid_size);
+	te_close_trusted_session_tlk(session_id, vrr_auth_uuid, uuid_size);
 }
 
 void tegra_hdmivrr_te_vrr_auth(struct tegra_vrr *vrr)

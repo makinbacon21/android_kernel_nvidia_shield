@@ -19,7 +19,7 @@
 #ifndef __OTE_PROTOCOL_H__
 #define __OTE_PROTOCOL_H__
 
-int tegra_set_vpr_params(void *vpr_base, size_t vpr_size);
+int tlk_set_vpr_params(void *vpr_base, size_t vpr_size);
 
 void trusty_restore_keyslots(void);
 void tlk_restore_keyslots(void);
