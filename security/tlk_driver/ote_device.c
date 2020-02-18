@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 NVIDIA Corporation. All rights reserved.
+ * Copyright (c) 2013-2018 NVIDIA Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/fs.h>
+#include <linux/platform_device.h>
 #include <linux/printk.h>
 #include <linux/ioctl.h>
 #include <linux/miscdevice.h>
@@ -29,6 +30,9 @@
 #include <linux/list.h>
 #include <linux/dma-mapping.h>
 #include <linux/of.h>
+#include <linux/of_platform.h>
+#include <linux/clk.h>
+#include <linux/reset.h>
 
 #include "ote_protocol.h"
 
@@ -84,7 +88,7 @@ static int te_create_free_cmd_list(struct tlk_device *dev)
 		goto error;
 	}
 
-	send_smc(TE_SMC_REGISTER_REQ_BUF,
+	tlk_send_smc(TE_SMC_REGISTER_REQ_BUF,
 			(uintptr_t)dev->req_addr, req_buf_size);
 
 	if (!dev->req_addr || !dev->param_addr || !dev->plist_addr) {
@@ -534,6 +538,28 @@ static long tlk_device_ioctl(struct file *file, unsigned int ioctl_num,
 	return err;
 }
 
+static struct device_node *get_tlk_device_node(void)
+{
+	struct device_node *node = NULL;
+	node = of_find_compatible_node(NULL, NULL, "android,tlk-driver");
+	if (!node)
+		pr_debug("TLK node not present in FDT\n");
+	return node;
+}
+
+int te_is_secos_dev_enabled(void)
+{
+	static int tlk_dev_status = 0;
+	struct device_node *node = NULL;
+
+	if (unlikely(tlk_dev_status == 0)) {
+		node = get_tlk_device_node();
+		tlk_dev_status = (node && of_device_is_available(node));
+	}
+
+	return tlk_dev_status;
+}
+
 /*
  * tlk_driver function definitions.
  */
@@ -553,58 +579,122 @@ struct miscdevice tlk_misc_device = {
 	.fops = &tlk_device_fops,
 };
 
-static struct device_node *get_tlk_device_node(void)
+static int tlk_driver_probe(struct platform_device *pdev)
 {
-	struct device_node *node;
-
-	node = of_find_compatible_node(NULL, NULL,
-			"nvidia,trusted-little-kernel");
-	if (!node)
-		pr_info("TLK node not present in the FDT\n");
-
-	return node;
-}
-
-static int __init tlk_init(void)
-{
+	struct reset_control *rst;
+	struct clk *clk;
 	int ret;
 
-	/* check if the driver node is present in the device tree */
-	if (get_tlk_device_node() == NULL) {
-		return -ENODEV;
+	clk = devm_clk_get(&pdev->dev, "nvdec");
+	if (!IS_ERR(clk)) {
+		ret = clk_prepare_enable(clk);
+		if (ret)
+			return ret;
+	} else if (PTR_ERR(clk) != -ENOENT) {
+		return PTR_ERR(clk);
+	} else {
+		pr_err("%s: nvdec clock not available\n", __func__);
 	}
 
-	INIT_LIST_HEAD(&(tlk_dev.used_cmd_list));
-	INIT_LIST_HEAD(&(tlk_dev.free_cmd_list));
+	rst = devm_reset_control_get(&pdev->dev, "nvdec");
+	if (!IS_ERR(rst)) {
+		ret = reset_control_deassert(rst);
+		if (ret)
+			return ret;
+	} else if (PTR_ERR(rst) != -ENOENT) {
+		return PTR_ERR(rst);
+	} else {
+		pr_err("%s: nvdec reset not available\n", __func__);
+	}
 
-	ret = te_create_free_cmd_list(&tlk_dev);
-	if (ret != 0)
-		return ret;
+	platform_set_drvdata(pdev, clk);
 
-	return misc_register(&tlk_misc_device);
+	ret = of_platform_populate(pdev->dev.of_node, NULL, NULL, &pdev->dev);
+	if (ret) {
+		pr_err("%s: of_platform_populate failed\n", __func__);
+		goto disable_clk;
+	}
+
+	if (!te_is_secos_dev_enabled()) {
+		ret = -ENODEV;
+		goto disable_clk;
+	}
+
+	return 0;
+
+disable_clk:
+	if (!IS_ERR(clk))
+		clk_disable_unprepare(clk);
+
+	return ret;
 }
 
-module_init(tlk_init);
+static int tlk_driver_remove(struct platform_device *pdev) {
+	struct clk *clk = platform_get_drvdata(pdev);
 
-int ote_property_is_disabled(const char *str)
-{
-	struct device_node *tlk;
-	const char *prop;
-
-	/* check if the driver node is present in the device tree */
-	tlk = get_tlk_device_node();
-	if (!tlk) {
-		pr_warn("%s: TLK device is not present\n", __func__);
-		return -ENODEV;
-	}
-
-	if (of_property_read_string(tlk, str, &prop)) {
-		pr_warn("missing \"%s\" property\n", str);
-		return -ENXIO;
-	}
-
-	if (strcmp("enabled", prop))
-		return -ENOTSUPP;
+	if (!IS_ERR(clk))
+		clk_disable_unprepare(clk);
 
 	return 0;
 }
+
+static const struct of_device_id tlk_driver_of_match[] = {
+	{ .compatible = "android,tlk-driver",},
+	{},
+};
+
+static struct platform_driver tlk_driver = {
+	.probe = tlk_driver_probe,
+	.remove = tlk_driver_remove,
+	.driver = {
+		.name = "tlk-driver",
+		.owner = THIS_MODULE,
+		.of_match_table = tlk_driver_of_match,
+	}
+};
+
+static int __init tlk_driver_init(void)
+{
+	if (get_tlk_device_node()) {
+		int ret;
+
+		INIT_LIST_HEAD(&(tlk_dev.used_cmd_list));
+		INIT_LIST_HEAD(&(tlk_dev.free_cmd_list));
+
+		ret = te_create_free_cmd_list(&tlk_dev);
+		if (ret != 0) {
+			pr_err("%s: failed to create free_list\n", __func__);
+			return ret;
+		}
+	}
+
+	return platform_driver_register(&tlk_driver);
+}
+
+static void __exit tlk_driver_exit(void)
+{
+	platform_driver_unregister(&tlk_driver);
+}
+
+/* Initialize early so that other device drivers can use it during boot */
+subsys_initcall(tlk_driver_init);
+module_exit(tlk_driver_exit);
+
+static int __init tlk_driver_misc_init(void)
+{
+	int ret;
+
+	ret = misc_register(&tlk_misc_device);
+	if (ret)
+		pr_err("%s: misc_register failed: %d\n", __func__, ret);
+
+	return ret;
+}
+
+static void __exit tlk_driver_misc_exit(void)
+{
+	misc_deregister(&tlk_misc_device);
+}
+
+module_init(tlk_driver_misc_init);
+module_exit(tlk_driver_misc_exit);

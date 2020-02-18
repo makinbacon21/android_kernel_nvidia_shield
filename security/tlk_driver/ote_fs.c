@@ -36,8 +36,8 @@ static DECLARE_COMPLETION(req_complete);
 static void tlk_ss_reset(void)
 {
 	/* reset completion vars to default state */
-	INIT_COMPLETION(req_ready);
-	INIT_COMPLETION(req_complete);
+	init_completion(&req_ready);
+	init_completion(&req_complete);
 }
 
 int te_handle_ss_ioctl(struct file *file, unsigned int ioctl_num,
@@ -87,19 +87,3 @@ int tlk_ss_op(void)
 
 	return OTE_SUCCESS;
 }
-
-static int __init tlk_ss_init(void)
-{
-	int ret;
-
-	/* storage disabled? */
-	ret = ote_property_is_disabled("storage");
-	if (ret) {
-		pr_warn("%s: tlk storage is disabled (%d)\n", __func__, ret);
-		return ret;
-	}
-
-	return 0;
-}
-
-arch_initcall(tlk_ss_init);

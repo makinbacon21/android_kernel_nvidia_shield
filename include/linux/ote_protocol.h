@@ -19,8 +19,11 @@
 #ifndef __OTE_PROTOCOL_H__
 #define __OTE_PROTOCOL_H__
 
-int te_set_vpr_params(void *vpr_base, size_t vpr_size);
-void te_restore_keyslots(void);
-void te_invalidate_btb(void);
+int tegra_set_vpr_params(void *vpr_base, size_t vpr_size);
+
+void trusty_restore_keyslots(void);
+void tlk_restore_keyslots(void);
+
+int te_is_secos_dev_enabled(void);
 
 #endif
