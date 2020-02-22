@@ -544,6 +544,11 @@ struct gk20a {
 		struct device *node;
 	} tsg;
 
+	struct {
+		struct cdev cdev;
+		struct device *node;
+	} ctxsw;
+
 	struct mutex client_lock;
 	int client_refcount; /* open channels and ctrl nodes */
 

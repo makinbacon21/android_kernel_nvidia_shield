@@ -52,6 +52,7 @@
 #include "gk20a.h"
 #include "debug_gk20a.h"
 #include "ctrl_gk20a.h"
+#include "ctxsw_trace.h"
 #include "hw_mc_gk20a.h"
 #include "hw_timer_gk20a.h"
 #include "hw_bus_gk20a.h"
@@ -165,6 +166,16 @@ static const struct file_operations gk20a_tsg_ops = {
 	.compat_ioctl = gk20a_tsg_dev_ioctl,
 #endif
 	.unlocked_ioctl = gk20a_tsg_dev_ioctl,
+};
+
+static const struct file_operations gk20a_ctxsw_ops = {
+	.owner = THIS_MODULE,
+	.release = gk20a_ctxsw_dev_release,
+	.open = gk20a_ctxsw_dev_open,
+#ifdef CONFIG_COMPAT
+	.compat_ioctl = gk20a_ctxsw_dev_ioctl,
+#endif
+	.unlocked_ioctl = gk20a_ctxsw_dev_ioctl,
 };
 
 static inline void sim_writel(struct gk20a *g, u32 r, u32 v)
@@ -1016,6 +1027,11 @@ void gk20a_user_deinit(struct platform_device *dev)
 		cdev_del(&g->tsg.cdev);
 	}
 
+	if (g->ctxsw.node) {
+		device_destroy(g->class, g->ctxsw.cdev.dev);
+		cdev_del(&g->ctxsw.cdev);
+	}
+
 	if (g->cdev_region)
 		unregister_chrdev_region(g->cdev_region, GK20A_NUM_CDEVS);
 
@@ -1078,6 +1094,12 @@ int gk20a_user_init(struct platform_device *dev)
 	err = gk20a_create_device(dev, devno++, "-tsg",
 				  &g->tsg.cdev, &g->tsg.node,
 				  &gk20a_tsg_ops);
+	if (err)
+		goto fail;
+
+	err = gk20a_create_device(dev, devno++, "-ctxsw",
+				  &g->ctxsw.cdev, &g->ctxsw.node,
+				  &gk20a_ctxsw_ops);
 	if (err)
 		goto fail;
 

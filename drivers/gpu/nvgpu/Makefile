@@ -21,6 +21,7 @@ nvgpu-y := \
 	gk20a/gk20a.o \
 	gk20a/as_gk20a.o \
 	gk20a/ctrl_gk20a.o \
+	gk20a/ctxsw_trace.o \
 	gk20a/ce2_gk20a.o \
 	gk20a/fifo_gk20a.o \
 	gk20a/channel_gk20a.o \
