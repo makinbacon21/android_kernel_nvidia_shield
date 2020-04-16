@@ -323,7 +323,7 @@ static int _yellowstone_wifi_get_mac_addr_nct(unsigned char *buf)
 	return ret;
 }
 
-#define YELLOWSTONE_WIFI_MAC_ADDR_FILE	"/persist/wifi_mac.txt"
+#define YELLOWSTONE_WIFI_MAC_ADDR_FILE	"/mnt/vendor/factory/wifi/wifi_mac.txt"
 static int _yellowstone_wifi_get_mac_addr_file(unsigned char *buf)
 {
 	struct file *fp;
