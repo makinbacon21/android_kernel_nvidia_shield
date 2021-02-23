@@ -174,7 +174,7 @@ source "drivers/reset/Kconfig"
 
 source "drivers/edp/Kconfig"
 
-source "drivers/gpu/nvgpu/Kconfig"
+source "../nvgpu/drivers/gpu/nvgpu/Kconfig.nvgpu"
 
 source "drivers/phy/Kconfig"
 
