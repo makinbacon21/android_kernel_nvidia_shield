@@ -641,6 +641,7 @@ endif
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-but-set-variable)
 
 KBUILD_CFLAGS += -I$(srctree)/../nvgpu/include
+KBUILD_CFLAGS += -I$(srctree)/../nvhost/include
 
 ifdef CONFIG_FRAME_POINTER
 KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls

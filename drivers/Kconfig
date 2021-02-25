@@ -176,6 +176,8 @@ source "drivers/edp/Kconfig"
 
 source "../nvgpu/drivers/gpu/nvgpu/Kconfig.nvgpu"
 
+source "../nvhost/drivers/video/tegra/Kconfig.nvhost"
+
 source "drivers/phy/Kconfig"
 
 source "drivers/android/Kconfig"
