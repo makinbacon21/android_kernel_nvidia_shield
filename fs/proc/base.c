@@ -142,6 +142,8 @@ struct pid_entry {
 		NULL, &proc_single_file_operations,	\
 		{ .proc_show = show } )
 
+static struct task_struct *next_tid(struct task_struct *start);
+
 /*
  * Count the number of hardlinks for the pid_entry table, excluding the .
  * and .. links.
@@ -2669,6 +2671,72 @@ static const struct file_operations proc_setgroups_operations = {
 };
 #endif /* CONFIG_USER_NS */
 
+static ssize_t proc_largest_task_read(struct file *file,
+	char __user *buf, size_t count, loff_t *ppos)
+{
+	struct inode *inode = file_inode(file);
+	struct task_struct *ptask = get_proc_task(inode);
+	struct task_struct *ctask;
+	struct sched_avg avg;
+	char buffer[PROC_NUMBUF*5];
+	size_t len;
+
+	/* Initialize largest*/
+	struct largest_task{
+		pid_t pid;
+		unsigned int weight;
+		unsigned long load_avg, util_avg;
+		unsigned int curr_cpu;
+	};
+
+	struct largest_task largest_task = {0, 1024, 0, 0, 0};
+
+	if (!ptask)
+		return -ESRCH;
+
+	ctask = ptask->group_leader;
+
+	if (!ctask) {
+		put_task_struct(ptask);
+		return -ESRCH;
+	}
+
+	get_task_struct(ctask);
+
+	for (; ctask; ctask = next_tid(ctask)) {
+
+		/* find load data of the ctask */
+		avg = ctask->se.avg;
+
+		/* if load_avg is greater than current largest,
+		 * set this task as the largest task */
+		if (avg.load_avg > largest_task.load_avg) {
+			largest_task.weight = avg.weight;
+			largest_task.load_avg = avg.load_avg;
+			largest_task.util_avg = avg.util_avg;
+			largest_task.curr_cpu = task_cpu(ctask);
+			largest_task.pid = ctask->pid;
+		}
+
+	}
+
+	len = snprintf(buffer, sizeof(buffer), "%d %i %lu %lu %i\n",
+					largest_task.pid,
+					largest_task.weight,
+					largest_task.load_avg,
+					largest_task.util_avg,
+					largest_task.curr_cpu);
+
+	put_task_struct(ptask);
+
+	return simple_read_from_buffer(buf, count, ppos, buffer, len);
+}
+
+static const struct file_operations proc_largest_task_operations = {
+	.read		= proc_largest_task_read,
+	.llseek		= generic_file_llseek,
+};
+
 static int proc_pid_personality(struct seq_file *m, struct pid_namespace *ns,
 				struct pid *pid, struct task_struct *task)
 {
@@ -2780,6 +2848,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 #ifdef CONFIG_CHECKPOINT_RESTORE
 	REG("timers",	  S_IRUGO, proc_timers_operations),
 #endif
+	REG("largest_task", S_IRUGO, proc_largest_task_operations),
 };
 
 static int proc_tgid_base_readdir(struct file * filp,
@@ -3171,6 +3240,7 @@ static const struct pid_entry tid_base_stuff[] = {
 	REG("projid_map", S_IRUGO|S_IWUSR, proc_projid_map_operations),
 	REG("setgroups",  S_IRUGO|S_IWUSR, proc_setgroups_operations),
 #endif
+	REG("largest_task", S_IRUGO, proc_largest_task_operations),
 };
 
 static int proc_tid_base_readdir(struct file * filp,
