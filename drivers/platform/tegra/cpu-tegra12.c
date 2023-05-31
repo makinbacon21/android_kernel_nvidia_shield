@@ -252,28 +252,35 @@ unsigned long tegra_emc_to_cpu_ratio(unsigned long cpu_rate)
 		return 0;		/* emc min */
 }
 
-static struct device_node *of_get_scaling_node(const char *name)
+static int cpu_emc_table_src = CPU_EMC_TABLE_SRC_DT;
+
+#ifdef CONFIG_ARCH_TEGRA_13x_SOC
+/* EMC/CPU frequency operational requirement limit */
+unsigned long tegra_emc_cpu_limit(unsigned long cpu_rate)
 {
-	struct device_node *scaling_np = NULL;
-	struct device_node *np =
-		of_find_compatible_node(NULL, NULL, "nvidia,tegra124-cpufreq");
+	static unsigned long last_emc_rate;
+	unsigned long emc_rate;
 
-	if (!np || !of_device_is_available(np)) {
-		pr_debug("%s: Tegra124 cpufreq node is not found\n", __func__);
-		of_node_put(np);
-		return NULL;
-	}
+	/* Vote on memory bus frequency based on cpu frequency;
+	   cpu rate is in kHz, emc rate is in Hz */
 
-	scaling_np = of_get_child_by_name(np, name);
-	of_node_put(np);
-	if (!scaling_np || !of_device_is_available(scaling_np)) {
-		pr_debug("%s: %s for cpufreq is not found\n", __func__, name);
-		of_node_put(scaling_np);
-		return NULL;
-	}
-	return scaling_np;
+	if ((tegra_revision != TEGRA_REVISION_A01) &&
+	    (tegra_revision != TEGRA_REVISION_A02))
+		return 0; /* no frequency dependency for A03+ revisions */
+
+	if (cpu_rate > 1020000)
+		emc_rate = 600000000;	/* cpu > 1.02GHz, emc 600MHz */
+	else
+		emc_rate = 300000000;	/* 300MHz floor always */
+
+	/* When going down, allow some time for CPU DFLL to settle */
+	if (emc_rate < last_emc_rate)
+		udelay(200);		/* FIXME: to be characterized */
+
+	last_emc_rate = emc_rate;
+	return emc_rate;
 }
-
+#else
 /*
  * Vote on memory bus frequency based on cpu frequency.
  * input cpu rate is in kHz
@@ -281,7 +288,6 @@ static struct device_node *of_get_scaling_node(const char *name)
  */
 static unsigned long emc_max_rate;
 static u32 *emc_cpu_table;
-static int cpu_emc_table_src = CPU_EMC_TABLE_SRC_DT;
 static int emc_cpu_table_size;
 
 static u32 *cpufreq_emc_table_get(int *table_size)
@@ -374,33 +380,6 @@ static unsigned long default_emc_cpu_limit(unsigned long cpu_rate,
 		return 0;       /* emc min */
 }
 
-#ifdef CONFIG_ARCH_TEGRA_13x_SOC
-/* EMC/CPU frequency operational requirement limit */
-unsigned long tegra_emc_cpu_limit(unsigned long cpu_rate)
-{
-	static unsigned long last_emc_rate;
-	unsigned long emc_rate;
-
-	/* Vote on memory bus frequency based on cpu frequency;
-	   cpu rate is in kHz, emc rate is in Hz */
-
-	if ((tegra_revision != TEGRA_REVISION_A01) &&
-	    (tegra_revision != TEGRA_REVISION_A02))
-		return 0; /* no frequency dependency for A03+ revisions */
-
-	if (cpu_rate > 1020000)
-		emc_rate = 600000000;	/* cpu > 1.02GHz, emc 600MHz */
-	else
-		emc_rate = 300000000;	/* 300MHz floor always */
-
-	/* When going down, allow some time for CPU DFLL to settle */
-	if (emc_rate < last_emc_rate)
-		udelay(200);		/* FIXME: to be characterized */
-
-	last_emc_rate = emc_rate;
-	return emc_rate;
-}
-#else
 unsigned long tegra_emc_cpu_limit(unsigned long cpu_rate)
 {
 	static unsigned long emc_rate;
